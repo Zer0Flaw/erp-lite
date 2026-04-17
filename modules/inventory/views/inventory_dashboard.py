@@ -80,20 +80,19 @@ class InventoryDashboard(QWidget):
         
         # Title
         title = QLabel("Inventory Dashboard")
-        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
-        title.setProperty("class", "header")
+        title.setProperty("class", "page-header")
         header_layout.addWidget(title)
         
         header_layout.addStretch()
         
         # Action buttons
         new_material_btn = QPushButton("New Material")
-        new_material_btn.setProperty("class", "success")
+        new_material_btn.setProperty("class", "primary")
         new_material_btn.clicked.connect(self.new_material_requested.emit)
         header_layout.addWidget(new_material_btn)
         
         receiving_btn = QPushButton("Receive Materials")
-        receiving_btn.setProperty("class", "secondary")
+        receiving_btn.setProperty("class", "accent")
         receiving_btn.clicked.connect(self.receiving_requested.emit)
         header_layout.addWidget(receiving_btn)
         
@@ -125,29 +124,27 @@ class InventoryDashboard(QWidget):
     def create_summary_card(self, title: str, value: str, color: str) -> QWidget:
         """Create a summary card widget."""
         card = QFrame()
-        card.setFrameStyle(QFrame.Shape.Box)
-        card.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border: 1px solid #E9ECEF;
-                border-radius: 8px;
-                padding: 15px;
-            }}
-        """)
+        card.setProperty("class", "summary-card")
+        if color == "#3498DB":
+            card.setProperty("accent", "primary")
+        elif color == "#27AE60":
+            card.setProperty("accent", "success")
+        elif color == "#F39C12":
+            card.setProperty("accent", "warning")
+        elif color == "#E74C3C":
+            card.setProperty("accent", "danger")
         
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 15, 15, 15)
         
-        # Title
-        title_label = QLabel(title)
-        title_label.setFont(QFont("Arial", 10))
-        title_label.setStyleSheet(f"color: {color}; font-weight: bold;")
-        layout.addWidget(title_label)
+        # Category label
+        category_label = QLabel(title.upper())
+        category_label.setProperty("class", "card-category")
+        layout.addWidget(category_label)
         
         # Value
         value_label = QLabel(value)
-        value_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
-        value_label.setStyleSheet(f"color: {color};")
+        value_label.setProperty("class", "card-value")
         layout.addWidget(value_label)
         
         return card

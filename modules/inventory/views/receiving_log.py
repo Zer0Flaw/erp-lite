@@ -67,8 +67,7 @@ class ReceivingLogView(QWidget):
         
         # Title
         title = QLabel("Receiving Log")
-        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
-        title.setProperty("class", "header")
+        title.setProperty("class", "page-header")
         header_layout.addWidget(title)
         
         header_layout.addStretch()
@@ -94,6 +93,7 @@ class ReceivingLogView(QWidget):
         
         # Search input
         search_label = QLabel("Search:")
+        search_label.setProperty("class", "subheader")
         filter_layout.addWidget(search_label)
         
         self.search_input = QLineEdit()
@@ -105,6 +105,7 @@ class ReceivingLogView(QWidget):
         
         # Filter by status
         status_label = QLabel("Status:")
+        status_label.setProperty("class", "subheader")
         filter_layout.addWidget(status_label)
         
         self.filter_combo = QComboBox()
@@ -116,6 +117,7 @@ class ReceivingLogView(QWidget):
         
         # Date filter
         date_label = QLabel("From Date:")
+        date_label.setProperty("class", "subheader")
         filter_layout.addWidget(date_label)
         
         self.date_filter = QDateEdit()
@@ -128,7 +130,7 @@ class ReceivingLogView(QWidget):
         
         # Apply filters button
         apply_btn = QPushButton("Apply Filters")
-        apply_btn.setProperty("class", "secondary")
+        apply_btn.setProperty("class", "accent")
         apply_btn.clicked.connect(self.apply_filters)
         filter_layout.addWidget(apply_btn)
         
@@ -198,11 +200,11 @@ class ReceivingLogView(QWidget):
                     # Set color based on status
                     if col == 4:  # Status column
                         if value == "Completed":
-                            table_item.setStyleSheet("color: #27AE60; font-weight: bold;")
+                            table_item.setProperty("class", "success")
                         elif value == "Pending":
-                            table_item.setStyleSheet("color: #F39C12; font-weight: bold;")
+                            table_item.setProperty("class", "warning")
                         elif value == "Cancelled":
-                            table_item.setStyleSheet("color: #E74C3C; font-weight: bold;")
+                            table_item.setProperty("class", "error")
                     
                     self.receiving_table.setItem(row, col, table_item)
         

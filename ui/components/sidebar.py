@@ -30,49 +30,30 @@ class SidebarButton(QPushButton):
         self.setCheckable(True)
         self.setAutoExclusive(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setMinimumHeight(45)
-        self.setMaximumHeight(45)
+        self.setMinimumHeight(42)
+        self.setMaximumHeight(42)
         
         # Create layout
         self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(15, 5, 15, 5)
+        self.layout.setContentsMargins(15, 12, 15, 12)
         self.layout.setSpacing(10)
         
-        # Icon label (using text icon for now)
+        # Icon label (using Unicode symbols)
         self.icon_label = QLabel(icon_text)
         self.icon_label.setMinimumWidth(30)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_font = QFont("Arial", 16, QFont.Weight.Bold)
+        icon_font = QFont("Segoe UI", 14, QFont.Weight.Normal)
         self.icon_label.setFont(icon_font)
         self.layout.addWidget(self.icon_label)
         
         # Text label
         self.text_label = QLabel(label)
-        self.text_label.setFont(QFont("Arial", 11))
+        text_font = QFont("Segoe UI", 12, QFont.Weight.Medium)
+        self.text_label.setFont(text_font)
         self.layout.addWidget(self.text_label)
         
-        # Set stylesheet
-        self.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                border-radius: 8px;
-                color: #E0E0E0;
-                text-align: left;
-                padding: 8px;
-                margin: 2px;
-            }
-            QPushButton:hover {
-                background-color: #2C3E50;
-            }
-            QPushButton:checked {
-                background-color: #3498DB;
-                color: white;
-            }
-            QPushButton:pressed {
-                background-color: #2980B9;
-            }
-        """)
+        # Set object name for styling
+        self.setObjectName("sidebar-button")
     
     def set_collapsed(self, collapsed: bool) -> None:
         """Show/hide text label based on collapsed state."""
@@ -135,27 +116,12 @@ class Sidebar(QWidget):
         
         # Company logo/text
         self.company_label = QLabel("XPanda")
-        self.company_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-        self.company_label.setStyleSheet("color: #ECF0F1;")
+        self.company_label.setProperty("class", "company-header")
         header_layout.addWidget(self.company_label)
         
         # Collapse button
         self.collapse_button = QToolButton()
         self.collapse_button.setText("«")
-        self.collapse_button.setStyleSheet("""
-            QToolButton {
-                background-color: transparent;
-                border: none;
-                color: #ECF0F1;
-                font-size: 16px;
-                font-weight: bold;
-                padding: 5px;
-                border-radius: 4px;
-            }
-            QToolButton:hover {
-                background-color: #34495E;
-            }
-        """)
         self.collapse_button.clicked.connect(self.toggle_collapse)
         header_layout.addWidget(self.collapse_button)
         
@@ -173,12 +139,18 @@ class Sidebar(QWidget):
         self.button_group = QButtonGroup(self)
         self.button_group.setExclusive(True)
         
-        # Module definitions
+        # Module definitions with Unicode icons
         modules = [
-            ("inventory", "inventory", "Inventory", "Inventory & Materials"),
-            ("production", "production", "Production", "Production & Scheduling"),
-            ("orders", "orders", "Orders", "Order Management"),
-            ("quality", "quality", "Quality", "Quality Management"),
+            ("inventory", "inventory", "📦 Inventory", "Inventory & Materials"),
+            ("production", "production", "⚙️ Production", "Production & Scheduling"),
+            ("production_bom", "bom", "🔧 BOM Editor", "Bill of Materials"),
+            ("production_work_orders", "work", "📋 Work Orders", "Work Order Management"),
+            ("orders", "orders", "🛒 Orders", "Order Management"),
+            ("orders_customers", "customers", "👥 Customers", "Customer Management"),
+            ("orders_processing", "processing", "📊 Processing", "Order Processing"),
+            ("quality", "quality", "✅ Quality", "Quality Management"),
+            ("quality_inspections", "inspections", "🔍 Inspections", "Inspection Management"),
+            ("quality_ncr", "ncr", "⚠️ NCR", "NCR Tracking"),
         ]
         
         # Create scroll area for module buttons
@@ -186,25 +158,6 @@ class Sidebar(QWidget):
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                background-color: transparent;
-                border: none;
-            }
-            QScrollBar:vertical {
-                background-color: #34495E;
-                width: 8px;
-                border-radius: 4px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #7F8C8D;
-                border-radius: 4px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #95A5A6;
-            }
-        """)
         
         # Container widget for buttons
         buttons_widget = QWidget()
@@ -212,8 +165,18 @@ class Sidebar(QWidget):
         buttons_layout.setContentsMargins(0, 10, 0, 0)
         buttons_layout.setSpacing(2)
         
-        # Create module buttons
+        # Group modules by section
+        current_section = None
         for icon, module_id, short_name, full_name in modules:
+            # Add section header if section changes
+            section = self.get_module_section(module_id)
+            if section != current_section:
+                section_header = QLabel(section)
+                section_header.setProperty("class", "section-header")
+                section_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                buttons_layout.addWidget(section_header)
+                current_section = section
+            
             button = SidebarButton(icon, full_name, module_id)
             self.button_group.addButton(button)
             self.module_buttons[module_id] = button
@@ -235,28 +198,12 @@ class Sidebar(QWidget):
         self.main_layout.addWidget(separator)
         
         # Settings button
-        settings_button = SidebarButton("settings", "Settings", "settings")
-        settings_button.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                border-radius: 8px;
-                color: #BDC3C7;
-                text-align: left;
-                padding: 8px;
-                margin: 2px;
-            }
-            QPushButton:hover {
-                background-color: #34495E;
-                color: #ECF0F1;
-            }
-        """)
+        settings_button = SidebarButton("⚙️", "Settings", "settings")
         self.main_layout.addWidget(settings_button)
         
         # User info (placeholder)
         user_label = QLabel("Admin User")
-        user_label.setFont(QFont("Arial", 9))
-        user_label.setStyleSheet("color: #7F8C8D; padding: 5px;")
+        user_label.setProperty("class", "muted")
         user_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.main_layout.addWidget(user_label)
     
@@ -298,8 +245,24 @@ class Sidebar(QWidget):
             self.module_buttons[module_name].setChecked(True)
             self.module_selected.emit(module_name)
     
+    def get_module_section(self, module_id: str) -> Optional[str]:
+        """Get section name for a module ID."""
+        section_mapping = {
+            'inventory': None,  # Inventory is top level
+            'production': 'PRODUCTION',
+            'production_bom': 'PRODUCTION',
+            'production_work_orders': 'PRODUCTION',
+            'orders': 'ORDERS',
+            'orders_customers': 'ORDERS',
+            'orders_processing': 'ORDERS',
+            'quality': 'QUALITY',
+            'quality_inspections': 'QUALITY',
+            'quality_ncr': 'QUALITY',
+        }
+        return section_mapping.get(module_id)
+    
     def get_current_module(self) -> Optional[str]:
-        """Get the currently selected module."""
+        """Get currently selected module."""
         if self.button_group and self.button_group.checkedButton():
             button = self.button_group.checkedButton()
             if hasattr(button, 'module_name'):

@@ -58,40 +58,7 @@ class DataTable(QTableWidget):
         # Context menu
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         
-        # Styling
-        self.setStyleSheet("""
-            QTableWidget {
-                background-color: white;
-                alternate-background-color: #F8F9FA;
-                gridline-color: #E9ECEF;
-                selection-background-color: #3498DB;
-                selection-color: white;
-                border: 1px solid #DEE2E6;
-                border-radius: 4px;
-            }
-            
-            QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #E9ECEF;
-            }
-            
-            QTableWidget::item:selected {
-                background-color: #3498DB;
-                color: white;
-            }
-            
-            QHeaderView::section {
-                background-color: #F8F9FA;
-                padding: 8px;
-                border: 1px solid #DEE2E6;
-                border-right: 1px solid #E9ECEF;
-                font-weight: bold;
-            }
-            
-            QHeaderView::section:hover {
-                background-color: #E9ECEF;
-            }
-        """)
+        # Styling is now handled by centralized StyleManager
     
     def setup_connections(self) -> None:
         """Connect signals and slots."""

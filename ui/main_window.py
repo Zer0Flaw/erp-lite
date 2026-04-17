@@ -6,7 +6,7 @@ Features sidebar navigation, status bar, and module management.
 import logging
 from typing import Optional, Dict, Any
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QSplitter, QStackedWidget, QStatusBar, QLabel,
     QFrame, QScrollArea, QSizePolicy
 )
@@ -16,9 +16,26 @@ from PyQt6.QtGui import QIcon, QAction, QKeySequence
 from ui.components.sidebar import Sidebar
 from ui.components.status_bar import StatusBar
 from ui.themes.style_manager import StyleManager
+
+# Inventory modules
 from modules.inventory.views.inventory_dashboard import InventoryDashboard
 from modules.inventory.views.material_detail import MaterialDetailView
 from modules.inventory.views.receiving_log import ReceivingLogView
+
+# Production modules
+from modules.production.views.production_dashboard import ProductionDashboard
+from modules.production.views.bom_editor import BOMEditor
+from modules.production.views.work_order_management import WorkOrderManagement
+
+# Orders modules
+from modules.orders.views.orders_dashboard import OrdersDashboard
+from modules.orders.views.customer_management import CustomerManagement
+from modules.orders.views.order_processing import OrderProcessing
+
+# Quality modules
+from modules.quality.views.quality_dashboard import QualityDashboard
+from modules.quality.views.inspection_management import InspectionManagement
+from modules.quality.views.ncr_tracking import NCRTracking
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +81,9 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1200, 800)
         self.resize(1600, 1000)
         
+        # Apply theme to entire application
+        self.style_manager.apply_theme(QApplication.instance(), "dark")
+        
         # Restore window geometry if available
         if self.settings.contains("mainwindow/geometry"):
             self.restoreGeometry(self.settings.value("mainwindow/geometry"))
@@ -92,6 +112,7 @@ class MainWindow(QMainWindow):
         
         # Setup content area
         content_widget = QWidget()
+        content_widget.setProperty("class", "content-area")
         content_layout = QVBoxLayout(content_widget)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
@@ -161,8 +182,8 @@ class MainWindow(QMainWindow):
         self.addAction(escape_action)
     
     def apply_theme(self) -> None:
-        """Apply the current theme to the window."""
-        theme_name = self.settings.value("app/theme", "default")
+        """Apply current theme to window."""
+        theme_name = self.settings.value("app/theme", "dark")
         self.style_manager.apply_theme(self, theme_name)
     
     def load_module(self, module_name: str) -> None:
@@ -221,23 +242,23 @@ class MainWindow(QMainWindow):
             elif module_name == 'receiving':
                 return ReceivingLogView(self.db_manager, self.settings)
             elif module_name == 'production':
-                # Placeholder for production module
-                widget = QWidget()
-                layout = QVBoxLayout(widget)
-                layout.addWidget(QLabel("Production Module - Coming Soon"))
-                return widget
+                return ProductionDashboard(self.db_manager, self.settings)
+            elif module_name == 'production_bom':
+                return BOMEditor(self.db_manager, self.settings)
+            elif module_name == 'production_work_orders':
+                return WorkOrderManagement(self.db_manager, self.settings)
             elif module_name == 'orders':
-                # Placeholder for orders module
-                widget = QWidget()
-                layout = QVBoxLayout(widget)
-                layout.addWidget(QLabel("Orders Module - Coming Soon"))
-                return widget
+                return OrdersDashboard(self.db_manager, self.settings)
+            elif module_name == 'orders_customers':
+                return CustomerManagement(self.db_manager, self.settings)
+            elif module_name == 'orders_processing':
+                return OrderProcessing(self.db_manager, self.settings)
             elif module_name == 'quality':
-                # Placeholder for quality module
-                widget = QWidget()
-                layout = QVBoxLayout(widget)
-                layout.addWidget(QLabel("Quality Module - Coming Soon"))
-                return widget
+                return QualityDashboard(self.db_manager, self.settings)
+            elif module_name == 'quality_inspections':
+                return InspectionManagement(self.db_manager, self.settings)
+            elif module_name == 'quality_ncr':
+                return NCRTracking(self.db_manager, self.settings)
             else:
                 logger.warning(f"Unknown module: {module_name}")
                 return None

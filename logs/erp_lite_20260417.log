@@ -184,3 +184,48 @@ WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_d
 2026-04-17 11:06:10 - database.connection - INFO - Database connection closed
 2026-04-17 11:06:10 - __main__ - INFO - Database connection closed
 2026-04-17 11:06:10 - __main__ - INFO - Settings saved
+2026-04-17 12:22:54 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 12:22:54 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 12:22:54 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 12:22:54 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 12:22:54 - database.connection - INFO - Database connection established successfully
+2026-04-17 12:22:55 - ui.main_window - INFO - Module inventory loaded successfully
+2026-04-17 12:22:55 - ui.main_window - INFO - Main window initialized
+2026-04-17 12:22:55 - __main__ - INFO - Application setup completed successfully
+2026-04-17 12:23:11 - database.connection - INFO - Database connection closed
+2026-04-17 12:23:11 - ui.main_window - INFO - Application closed gracefully
+2026-04-17 12:23:11 - database.connection - INFO - Database connection closed
+2026-04-17 12:23:11 - __main__ - INFO - Database connection closed
+2026-04-17 12:23:11 - __main__ - INFO - Settings saved
+2026-04-17 13:05:08 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 13:05:08 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 13:05:08 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 13:05:08 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 13:05:08 - database.connection - INFO - Database connection established successfully
+2026-04-17 13:05:08 - __main__ - ERROR - Failed to setup application: name 'QApplication' is not defined
+2026-04-17 13:05:08 - database.connection - INFO - Database connection closed
+2026-04-17 13:05:08 - __main__ - INFO - Database connection closed
+2026-04-17 13:05:08 - __main__ - INFO - Settings saved
+2026-04-17 13:06:59 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 13:06:59 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 13:06:59 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 13:06:59 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 13:06:59 - database.connection - INFO - Database connection established successfully
+2026-04-17 13:07:01 - ui.main_window - INFO - Module inventory loaded successfully
+2026-04-17 13:07:01 - ui.main_window - INFO - Main window initialized
+2026-04-17 13:07:01 - __main__ - INFO - Application setup completed successfully
+2026-04-17 13:07:17 - ui.main_window - INFO - Module production loaded successfully
+2026-04-17 13:07:29 - ui.main_window - WARNING - Unknown module: bom
+2026-04-17 13:07:31 - ui.main_window - WARNING - Unknown module: work
+2026-04-17 13:07:33 - ui.main_window - INFO - Module orders loaded successfully
+2026-04-17 13:08:11 - ui.main_window - INFO - Module quality loaded successfully
+2026-04-17 13:08:30 - ui.main_window - WARNING - Unknown module: inspections
+2026-04-17 13:08:33 - ui.main_window - WARNING - Unknown module: ncr
+2026-04-17 13:08:34 - ui.main_window - WARNING - Unknown module: inspections
+2026-04-17 13:08:35 - ui.main_window - WARNING - Unknown module: processing
+2026-04-17 13:08:37 - ui.main_window - WARNING - Unknown module: customers
+2026-04-17 13:08:57 - database.connection - INFO - Database connection closed
+2026-04-17 13:08:57 - ui.main_window - INFO - Application closed gracefully
+2026-04-17 13:08:58 - database.connection - INFO - Database connection closed
+2026-04-17 13:08:58 - __main__ - INFO - Database connection closed
+2026-04-17 13:08:58 - __main__ - INFO - Settings saved
