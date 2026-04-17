@@ -63,8 +63,9 @@ class DatabaseManager:
             )
             
             # Test SQLAlchemy connection
-            with self.get_session() as session:
-                session.execute("SELECT 1")
+            with self.engine.connect() as conn:
+                from sqlalchemy import text
+                conn.execute(text("SELECT 1"))
             
             self._is_connected = True
             logger.info("Database connection established successfully")
@@ -83,6 +84,8 @@ class DatabaseManager:
             True if connection successful, False otherwise
         """
         try:
+            logger.info(f"Testing database connection to {self.config.host}:{self.config.port}/{self.config.database}")
+            
             conn = psycopg2.connect(
                 host=self.config.host,
                 port=self.config.port,
@@ -91,11 +94,31 @@ class DatabaseManager:
                 password=self.config.password,
                 connect_timeout=10
             )
+            
+            # Test if we can execute a query
+            cursor = conn.cursor()
+            cursor.execute("SELECT version()")
+            version = cursor.fetchone()
+            cursor.close()
             conn.close()
+            
+            logger.info(f"Database connection test successful. PostgreSQL version: {version[0] if version else 'Unknown'}")
             return True
             
         except psycopg2.OperationalError as e:
-            logger.error(f"PostgreSQL connection failed: {e}")
+            error_msg = str(e)
+            logger.error(f"PostgreSQL connection failed: {error_msg}")
+            
+            # Provide helpful error messages
+            if "does not exist" in error_msg:
+                logger.error(f"Database '{self.config.database}' does not exist. Please create it first.")
+            elif "authentication failed" in error_msg.lower() or "password authentication failed" in error_msg.lower():
+                logger.error(f"Authentication failed for user '{self.config.username}'. Check username and password.")
+            elif "connection refused" in error_msg.lower():
+                logger.error(f"Connection refused. Check if PostgreSQL is running on {self.config.host}:{self.config.port}")
+            elif "timeout" in error_msg.lower():
+                logger.error("Connection timeout. Check network connectivity and firewall settings.")
+            
             return False
         except Exception as e:
             logger.error(f"Unexpected connection error: {e}")

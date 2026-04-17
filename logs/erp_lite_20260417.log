@@ -1,0 +1,186 @@
+2026-04-17 09:38:27 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 09:38:27 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 09:38:27 - database.connection - ERROR - PostgreSQL connection failed: connection to server at "localhost" (::1), port 5432 failed: FATAL:  database "xpanda_erp" does not exist
+
+2026-04-17 09:38:27 - __main__ - ERROR - Failed to connect to database
+2026-04-17 09:38:27 - database.connection - INFO - Database connection closed
+2026-04-17 09:38:27 - __main__ - INFO - Database connection closed
+2026-04-17 09:38:27 - __main__ - INFO - Settings saved
+2026-04-17 09:48:09 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 09:48:09 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 09:48:09 - database.connection - ERROR - Failed to connect to database: Database not connected
+2026-04-17 09:48:09 - __main__ - ERROR - Failed to connect to database
+2026-04-17 09:48:09 - database.connection - INFO - Database connection closed
+2026-04-17 09:48:09 - __main__ - INFO - Database connection closed
+2026-04-17 09:48:09 - __main__ - INFO - Settings saved
+2026-04-17 10:38:25 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 10:38:25 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 10:38:25 - database.connection - ERROR - Failed to connect to database: Database not connected
+2026-04-17 10:38:25 - __main__ - ERROR - Failed to connect to database
+2026-04-17 10:38:25 - database.connection - INFO - Database connection closed
+2026-04-17 10:38:25 - __main__ - INFO - Database connection closed
+2026-04-17 10:38:25 - __main__ - INFO - Settings saved
+2026-04-17 10:56:23 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 10:56:23 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 10:56:23 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 10:56:23 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 10:56:23 - database.connection - ERROR - Failed to connect to database: Database not connected
+2026-04-17 10:56:23 - __main__ - ERROR - Failed to connect to database
+2026-04-17 10:56:23 - database.connection - INFO - Database connection closed
+2026-04-17 10:56:23 - __main__ - INFO - Database connection closed
+2026-04-17 10:56:23 - __main__ - INFO - Settings saved
+2026-04-17 11:04:29 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 11:04:29 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 11:04:29 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 11:04:29 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 11:04:30 - database.connection - ERROR - Failed to connect to database: Not an executable object: 'SELECT 1'
+2026-04-17 11:04:30 - __main__ - ERROR - Failed to connect to database
+2026-04-17 11:04:30 - database.connection - INFO - Database connection closed
+2026-04-17 11:04:30 - __main__ - INFO - Database connection closed
+2026-04-17 11:04:30 - __main__ - INFO - Settings saved
+2026-04-17 11:05:38 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 11:05:38 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 11:05:38 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 11:05:38 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 11:05:38 - database.connection - INFO - Database connection established successfully
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 3: FROM materials 
+             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.material_service - ERROR - Failed to get material statistics: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 3: FROM materials 
+             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 3: FROM inventory_transactions 
+             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by 
+FROM inventory_transactions 
+WHERE inventory_transactions.transaction_date >= %(transaction_date_1)s) AS anon_1]
+[parameters: {'transaction_date_1': datetime.date(2026, 4, 17)}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.transaction_service - ERROR - Failed to get transaction statistics: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 3: FROM inventory_transactions 
+             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by 
+FROM inventory_transactions 
+WHERE inventory_transactions.transaction_date >= %(transaction_date_1)s) AS anon_1]
+[parameters: {'transaction_date_1': datetime.date(2026, 4, 17)}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 2: FROM inventory_transactions JOIN materials ON inventory_tran...
+             ^
+
+[SQL: SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by, materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM inventory_transactions JOIN materials ON inventory_transactions.material_id = materials.id 
+WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_date DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 10}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.transaction_service - ERROR - Failed to get recent transactions: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 2: FROM inventory_transactions JOIN materials ON inventory_tran...
+             ^
+
+[SQL: SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by, materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM inventory_transactions JOIN materials ON inventory_transactions.material_id = materials.id 
+WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_date DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 10}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true AND materials.reorder_point > %(reorder_point_1)s]
+[parameters: {'reorder_point_1': 0}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.material_service - ERROR - Failed to get low stock materials: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true AND materials.reorder_point > %(reorder_point_1)s]
+[parameters: {'reorder_point_1': 0}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true ORDER BY materials.sku]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.material_service - ERROR - Failed to get materials: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND materials.active = true ORDER BY materials.sku]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND (materials.sku ILIKE %(sku_1)s OR materials.name ILIKE %(name_1)s OR materials.description ILIKE %(description_1)s) ORDER BY materials.sku]
+[parameters: {'sku_1': '%%', 'name_1': '%%', 'description_1': '%%'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.material_service - ERROR - Failed to search materials: (psycopg2.errors.UndefinedTable) relation "materials" does not exist
+LINE 2: FROM materials 
+             ^
+
+[SQL: SELECT materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM materials 
+WHERE materials.deleted_at IS NULL AND (materials.sku ILIKE %(sku_1)s OR materials.name ILIKE %(name_1)s OR materials.description ILIKE %(description_1)s) ORDER BY materials.sku]
+[parameters: {'sku_1': '%%', 'name_1': '%%', 'description_1': '%%'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 2: FROM inventory_transactions JOIN materials ON inventory_tran...
+             ^
+
+[SQL: SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by, materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM inventory_transactions JOIN materials ON inventory_transactions.material_id = materials.id 
+WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_date DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - modules.inventory.services.transaction_service - ERROR - Failed to get recent transactions: (psycopg2.errors.UndefinedTable) relation "inventory_transactions" does not exist
+LINE 2: FROM inventory_transactions JOIN materials ON inventory_tran...
+             ^
+
+[SQL: SELECT inventory_transactions.id AS inventory_transactions_id, inventory_transactions.material_id AS inventory_transactions_material_id, inventory_transactions.transaction_type AS inventory_transactions_transaction_type, inventory_transactions.quantity AS inventory_transactions_quantity, inventory_transactions.unit_cost AS inventory_transactions_unit_cost, inventory_transactions.total_cost AS inventory_transactions_total_cost, inventory_transactions.reference_type AS inventory_transactions_reference_type, inventory_transactions.reference_number AS inventory_transactions_reference_number, inventory_transactions.lot_number AS inventory_transactions_lot_number, inventory_transactions.batch_number AS inventory_transactions_batch_number, inventory_transactions.transaction_date AS inventory_transactions_transaction_date, inventory_transactions.reason_code AS inventory_transactions_reason_code, inventory_transactions.notes AS inventory_transactions_notes, inventory_transactions.posted AS inventory_transactions_posted, inventory_transactions.posted_date AS inventory_transactions_posted_date, inventory_transactions.created_at AS inventory_transactions_created_at, inventory_transactions.updated_at AS inventory_transactions_updated_at, inventory_transactions.created_by AS inventory_transactions_created_by, materials.id AS materials_id, materials.sku AS materials_sku, materials.name AS materials_name, materials.description AS materials_description, materials.category AS materials_category, materials.unit_of_measure AS materials_unit_of_measure, materials.weight_per_unit AS materials_weight_per_unit, materials.dimensions AS materials_dimensions, materials.reorder_point AS materials_reorder_point, materials.max_stock_level AS materials_max_stock_level, materials.preferred_supplier AS materials_preferred_supplier, materials.storage_location AS materials_storage_location, materials.standard_cost AS materials_standard_cost, materials.average_cost AS materials_average_cost, materials.last_cost AS materials_last_cost, materials.expansion_ratio AS materials_expansion_ratio, materials.density_target AS materials_density_target, materials.mold_id AS materials_mold_id, materials.active AS materials_active, materials.is_kit AS materials_is_kit, materials.notes AS materials_notes, materials.created_at AS materials_created_at, materials.updated_at AS materials_updated_at, materials.created_by AS materials_created_by, materials.deleted_at AS materials_deleted_at 
+FROM inventory_transactions JOIN materials ON inventory_transactions.material_id = materials.id 
+WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_date DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 11:05:39 - ui.main_window - INFO - Module inventory loaded successfully
+2026-04-17 11:05:39 - ui.main_window - INFO - Main window initialized
+2026-04-17 11:05:39 - __main__ - INFO - Application setup completed successfully
+2026-04-17 11:06:04 - ui.main_window - INFO - Module quality loaded successfully
+2026-04-17 11:06:05 - ui.main_window - INFO - Module orders loaded successfully
+2026-04-17 11:06:08 - ui.main_window - INFO - Module production loaded successfully
+2026-04-17 11:06:10 - database.connection - INFO - Database connection closed
+2026-04-17 11:06:10 - ui.main_window - INFO - Application closed gracefully
+2026-04-17 11:06:10 - database.connection - INFO - Database connection closed
+2026-04-17 11:06:10 - __main__ - INFO - Database connection closed
+2026-04-17 11:06:10 - __main__ - INFO - Settings saved
