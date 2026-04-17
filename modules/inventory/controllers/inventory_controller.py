@@ -8,9 +8,9 @@ from typing import List, Optional, Dict, Any, Callable
 from uuid import UUID
 
 from database.connection import DatabaseManager
-from .services.inventory_service import InventoryService
-from .services.material_service import MaterialService
-from .services.transaction_service import TransactionService
+from ..services.inventory_service import InventoryService
+from ..services.material_service import MaterialService
+from ..services.transaction_service import TransactionService
 
 logger = logging.getLogger(__name__)
 

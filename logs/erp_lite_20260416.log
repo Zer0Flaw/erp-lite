@@ -1,0 +1,4 @@
+2026-04-16 22:13:53 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260416.log
+2026-04-16 22:13:53 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-16 22:13:53 - __main__ - ERROR - Configuration validation failed:
+2026-04-16 22:13:53 - __main__ - ERROR -   - Google Drive client secrets file not found: client_secrets.json
