@@ -229,3 +229,211 @@ WHERE materials.deleted_at IS NULL ORDER BY inventory_transactions.transaction_d
 2026-04-17 13:08:58 - database.connection - INFO - Database connection closed
 2026-04-17 13:08:58 - __main__ - INFO - Database connection closed
 2026-04-17 13:08:58 - __main__ - INFO - Settings saved
+2026-04-17 13:13:30 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 13:13:30 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 13:13:30 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 13:13:30 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 13:13:30 - database.connection - INFO - Database connection established successfully
+2026-04-17 13:13:32 - ui.main_window - INFO - Module inventory loaded successfully
+2026-04-17 13:13:32 - ui.main_window - INFO - Main window initialized
+2026-04-17 13:13:32 - __main__ - INFO - Application setup completed successfully
+2026-04-17 13:27:28 - database.connection - INFO - Database connection closed
+2026-04-17 13:27:28 - ui.main_window - INFO - Application closed gracefully
+2026-04-17 13:27:28 - database.connection - INFO - Database connection closed
+2026-04-17 13:27:28 - __main__ - INFO - Database connection closed
+2026-04-17 13:27:28 - __main__ - INFO - Settings saved
+2026-04-17 13:35:29 - utils.logger - INFO - Logging initialized. Log file: logs\erp_lite_20260417.log
+2026-04-17 13:35:29 - __main__ - INFO - XPanda ERP-Lite starting up...
+2026-04-17 13:35:29 - database.connection - INFO - Testing database connection to localhost:5432/xpanda_erp
+2026-04-17 13:35:29 - database.connection - INFO - Database connection test successful. PostgreSQL version: PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35225, 64-bit
+2026-04-17 13:35:30 - database.connection - INFO - Database connection established successfully
+2026-04-17 13:35:32 - ui.main_window - INFO - Module inventory loaded successfully
+2026-04-17 13:35:32 - ui.main_window - INFO - Main window initialized
+2026-04-17 13:35:32 - __main__ - INFO - Application setup completed successfully
+2026-04-17 13:35:37 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "production_stations" does not exist
+LINE 2: FROM production_stations 
+             ^
+
+[SQL: SELECT production_stations.id AS production_stations_id, production_stations.station_id AS production_stations_station_id, production_stations.name AS production_stations_name, production_stations.station_type AS production_stations_station_type, production_stations.status AS production_stations_status, production_stations.current_work_order_id AS production_stations_current_work_order_id, production_stations.current_operator_id AS production_stations_current_operator_id, production_stations.current_operator_name AS production_stations_current_operator_name, production_stations.current_batch_id AS production_stations_current_batch_id, production_stations.capacity_per_hour AS production_stations_capacity_per_hour, production_stations.max_block_size AS production_stations_max_block_size, production_stations.temperature_range AS production_stations_temperature_range, production_stations.last_maintenance_date AS production_stations_last_maintenance_date, production_stations.next_maintenance_date AS production_stations_next_maintenance_date, production_stations.maintenance_hours AS production_stations_maintenance_hours, production_stations.total_runtime_hours AS production_stations_total_runtime_hours, production_stations.location AS production_stations_location, production_stations.department AS production_stations_department, production_stations.status_reason AS production_stations_status_reason, production_stations.notes AS production_stations_notes, production_stations.created_at AS production_stations_created_at, production_stations.updated_at AS production_stations_updated_at 
+FROM production_stations 
+WHERE production_stations.status = %(status_1)s ORDER BY production_stations.station_id]
+[parameters: {'status_1': 'available'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.services.station_management_service - ERROR - Error getting available stations: (psycopg2.errors.UndefinedTable) relation "production_stations" does not exist
+LINE 2: FROM production_stations 
+             ^
+
+[SQL: SELECT production_stations.id AS production_stations_id, production_stations.station_id AS production_stations_station_id, production_stations.name AS production_stations_name, production_stations.station_type AS production_stations_station_type, production_stations.status AS production_stations_status, production_stations.current_work_order_id AS production_stations_current_work_order_id, production_stations.current_operator_id AS production_stations_current_operator_id, production_stations.current_operator_name AS production_stations_current_operator_name, production_stations.current_batch_id AS production_stations_current_batch_id, production_stations.capacity_per_hour AS production_stations_capacity_per_hour, production_stations.max_block_size AS production_stations_max_block_size, production_stations.temperature_range AS production_stations_temperature_range, production_stations.last_maintenance_date AS production_stations_last_maintenance_date, production_stations.next_maintenance_date AS production_stations_next_maintenance_date, production_stations.maintenance_hours AS production_stations_maintenance_hours, production_stations.total_runtime_hours AS production_stations_total_runtime_hours, production_stations.location AS production_stations_location, production_stations.department AS production_stations_department, production_stations.status_reason AS production_stations_status_reason, production_stations.notes AS production_stations_notes, production_stations.created_at AS production_stations_created_at, production_stations.updated_at AS production_stations_updated_at 
+FROM production_stations 
+WHERE production_stations.status = %(status_1)s ORDER BY production_stations.station_id]
+[parameters: {'status_1': 'available'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.controllers.shop_floor_controller - ERROR - Error getting available stations: (psycopg2.errors.UndefinedTable) relation "production_stations" does not exist
+LINE 2: FROM production_stations 
+             ^
+
+[SQL: SELECT production_stations.id AS production_stations_id, production_stations.station_id AS production_stations_station_id, production_stations.name AS production_stations_name, production_stations.station_type AS production_stations_station_type, production_stations.status AS production_stations_status, production_stations.current_work_order_id AS production_stations_current_work_order_id, production_stations.current_operator_id AS production_stations_current_operator_id, production_stations.current_operator_name AS production_stations_current_operator_name, production_stations.current_batch_id AS production_stations_current_batch_id, production_stations.capacity_per_hour AS production_stations_capacity_per_hour, production_stations.max_block_size AS production_stations_max_block_size, production_stations.temperature_range AS production_stations_temperature_range, production_stations.last_maintenance_date AS production_stations_last_maintenance_date, production_stations.next_maintenance_date AS production_stations_next_maintenance_date, production_stations.maintenance_hours AS production_stations_maintenance_hours, production_stations.total_runtime_hours AS production_stations_total_runtime_hours, production_stations.location AS production_stations_location, production_stations.department AS production_stations_department, production_stations.status_reason AS production_stations_status_reason, production_stations.notes AS production_stations_notes, production_stations.created_at AS production_stations_created_at, production_stations.updated_at AS production_stations_updated_at 
+FROM production_stations 
+WHERE production_stations.status = %(status_1)s ORDER BY production_stations.station_id]
+[parameters: {'status_1': 'available'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.views.job_clock - WARNING - Could not load stations: (psycopg2.errors.UndefinedTable) relation "production_stations" does not exist
+LINE 2: FROM production_stations 
+             ^
+
+[SQL: SELECT production_stations.id AS production_stations_id, production_stations.station_id AS production_stations_station_id, production_stations.name AS production_stations_name, production_stations.station_type AS production_stations_station_type, production_stations.status AS production_stations_status, production_stations.current_work_order_id AS production_stations_current_work_order_id, production_stations.current_operator_id AS production_stations_current_operator_id, production_stations.current_operator_name AS production_stations_current_operator_name, production_stations.current_batch_id AS production_stations_current_batch_id, production_stations.capacity_per_hour AS production_stations_capacity_per_hour, production_stations.max_block_size AS production_stations_max_block_size, production_stations.temperature_range AS production_stations_temperature_range, production_stations.last_maintenance_date AS production_stations_last_maintenance_date, production_stations.next_maintenance_date AS production_stations_next_maintenance_date, production_stations.maintenance_hours AS production_stations_maintenance_hours, production_stations.total_runtime_hours AS production_stations_total_runtime_hours, production_stations.location AS production_stations_location, production_stations.department AS production_stations_department, production_stations.status_reason AS production_stations_status_reason, production_stations.notes AS production_stations_notes, production_stations.created_at AS production_stations_created_at, production_stations.updated_at AS production_stations_updated_at 
+FROM production_stations 
+WHERE production_stations.status = %(status_1)s ORDER BY production_stations.station_id]
+[parameters: {'status_1': 'available'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.views.job_clock - ERROR - Error loading recent activity: 'DataTableWithFilter' object has no attribute 'set_data'
+2026-04-17 13:35:37 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.services.time_entry_service - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.controllers.shop_floor_controller - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.views.job_clock - ERROR - Error loading active jobs: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - ui.main_window - INFO - Module shop_floor loaded successfully
+2026-04-17 13:35:37 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.services.time_entry_service - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.controllers.shop_floor_controller - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:37 - modules.shop_floor.views.job_clock - ERROR - Error in timer thread: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:42 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:42 - modules.shop_floor.services.time_entry_service - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:42 - modules.shop_floor.controllers.shop_floor_controller - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:42 - modules.shop_floor.views.job_clock - ERROR - Error in timer thread: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:47 - database.connection - ERROR - Database session error: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:47 - modules.shop_floor.services.time_entry_service - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:47 - modules.shop_floor.controllers.shop_floor_controller - ERROR - Error getting active time entries: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:47 - modules.shop_floor.views.job_clock - ERROR - Error in timer thread: (psycopg2.errors.UndefinedTable) relation "time_entries" does not exist
+LINE 2: FROM time_entries 
+             ^
+
+[SQL: SELECT time_entries.id AS time_entries_id, time_entries.employee_id AS time_entries_employee_id, time_entries.employee_name AS time_entries_employee_name, time_entries.work_order_id AS time_entries_work_order_id, time_entries.operation AS time_entries_operation, time_entries.station_id AS time_entries_station_id, time_entries.start_time AS time_entries_start_time, time_entries.end_time AS time_entries_end_time, time_entries.total_hours AS time_entries_total_hours, time_entries.status AS time_entries_status, time_entries.notes AS time_entries_notes, time_entries.badge_scan AS time_entries_badge_scan, time_entries.created_at AS time_entries_created_at, time_entries.updated_at AS time_entries_updated_at 
+FROM time_entries 
+WHERE time_entries.status = %(status_1)s ORDER BY time_entries.start_time DESC]
+[parameters: {'status_1': 'active'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-17 13:35:49 - database.connection - INFO - Database connection closed
+2026-04-17 13:35:49 - ui.main_window - INFO - Application closed gracefully
+2026-04-17 13:35:49 - database.connection - INFO - Database connection closed
+2026-04-17 13:35:49 - __main__ - INFO - Database connection closed
+2026-04-17 13:35:49 - __main__ - INFO - Settings saved

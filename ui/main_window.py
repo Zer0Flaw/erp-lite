@@ -37,6 +37,12 @@ from modules.quality.views.quality_dashboard import QualityDashboard
 from modules.quality.views.inspection_management import InspectionManagement
 from modules.quality.views.ncr_tracking import NCRTracking
 
+# Shop Floor modules
+from modules.shop_floor.views.job_clock import JobClockView
+from modules.shop_floor.views.production_recording import ProductionRecordingView
+from modules.shop_floor.views.batch_tracking import BatchTrackingView
+from modules.shop_floor.views.station_management import StationManagementView
+
 logger = logging.getLogger(__name__)
 
 
@@ -259,6 +265,16 @@ class MainWindow(QMainWindow):
                 return InspectionManagement(self.db_manager, self.settings)
             elif module_name == 'quality_ncr':
                 return NCRTracking(self.db_manager, self.settings)
+            elif module_name == 'shop_floor':
+                return JobClockView(self.db_manager, self.settings)
+            elif module_name == 'shop_floor_job_clock':
+                return JobClockView(self.db_manager, self.settings)
+            elif module_name == 'shop_floor_production':
+                return ProductionRecordingView(self.db_manager, self.settings)
+            elif module_name == 'shop_floor_batch':
+                return BatchTrackingView(self.db_manager, self.settings)
+            elif module_name == 'shop_floor_stations':
+                return StationManagementView(self.db_manager, self.settings)
             else:
                 logger.warning(f"Unknown module: {module_name}")
                 return None

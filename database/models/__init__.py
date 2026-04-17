@@ -52,6 +52,18 @@ from .quality import (
     CAPAStatus,
     CAPAPriority
 )
+from .shop_floor import (
+    TimeEntry,
+    ProductionOutput,
+    ProductionBatch,
+    ProductionStation,
+    TimeEntryStatus,
+    OperationType,
+    ProductionOutputType,
+    BatchType,
+    StationStatus,
+    StationType
+)
 
 __all__ = [
     'Base',
@@ -101,5 +113,17 @@ __all__ = [
     'NCRSeverity',
     'NCRDisposition',
     'CAPAStatus',
-    'CAPAPriority'
+    'CAPAPriority',
+    # Shop Floor models
+    'TimeEntry',
+    'ProductionOutput',
+    'ProductionBatch',
+    'ProductionStation',
+    # Shop Floor enums
+    'TimeEntryStatus',
+    'OperationType',
+    'ProductionOutputType',
+    'BatchType',
+    'StationStatus',
+    'StationType'
 ]

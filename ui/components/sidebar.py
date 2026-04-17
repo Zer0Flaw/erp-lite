@@ -141,16 +141,21 @@ class Sidebar(QWidget):
         
         # Module definitions with Unicode icons
         modules = [
-            ("inventory", "inventory", "📦 Inventory", "Inventory & Materials"),
-            ("production", "production", "⚙️ Production", "Production & Scheduling"),
-            ("production_bom", "bom", "🔧 BOM Editor", "Bill of Materials"),
-            ("production_work_orders", "work", "📋 Work Orders", "Work Order Management"),
-            ("orders", "orders", "🛒 Orders", "Order Management"),
-            ("orders_customers", "customers", "👥 Customers", "Customer Management"),
-            ("orders_processing", "processing", "📊 Processing", "Order Processing"),
-            ("quality", "quality", "✅ Quality", "Quality Management"),
-            ("quality_inspections", "inspections", "🔍 Inspections", "Inspection Management"),
-            ("quality_ncr", "ncr", "⚠️ NCR", "NCR Tracking"),
+            ("inventory", "inventory", "?? Inventory", "Inventory & Materials"),
+            ("shop_floor", "shop_floor", "?? Shop Floor", "Shop Floor Operations"),
+            ("shop_floor_job_clock", "job_clock", "?? Job Clock", "Time Tracking"),
+            ("shop_floor_production", "production_log", "?? Production Log", "Output Recording"),
+            ("shop_floor_batch", "batch_tracking", "?? Batch Tracking", "Lot Traceability"),
+            ("shop_floor_stations", "stations", "?? Stations", "Station Management"),
+            ("production", "production", "?? Production", "Production & Scheduling"),
+            ("production_bom", "bom", "?? BOM Editor", "Bill of Materials"),
+            ("production_work_orders", "work", "?? Work Orders", "Work Order Management"),
+            ("orders", "orders", "?? Orders", "Order Management"),
+            ("orders_customers", "customers", "?? Customers", "Customer Management"),
+            ("orders_processing", "processing", "?? Processing", "Order Processing"),
+            ("quality", "quality", "?? Quality", "Quality Management"),
+            ("quality_inspections", "inspections", "?? Inspections", "Inspection Management"),
+            ("quality_ncr", "ncr", "?? NCR", "NCR Tracking"),
         ]
         
         # Create scroll area for module buttons
@@ -249,6 +254,11 @@ class Sidebar(QWidget):
         """Get section name for a module ID."""
         section_mapping = {
             'inventory': None,  # Inventory is top level
+            'shop_floor': 'SHOP FLOOR',
+            'shop_floor_job_clock': 'SHOP FLOOR',
+            'shop_floor_production': 'SHOP FLOOR',
+            'shop_floor_batch': 'SHOP FLOOR',
+            'shop_floor_stations': 'SHOP FLOOR',
             'production': 'PRODUCTION',
             'production_bom': 'PRODUCTION',
             'production_work_orders': 'PRODUCTION',
