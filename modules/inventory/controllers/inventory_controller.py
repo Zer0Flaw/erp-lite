@@ -4,7 +4,7 @@ Bridges UI components with inventory services and handles business logic coordin
 """
 
 import logging
-from typing import List, Optional, Dict, Any, Callable
+from typing import List, Optional, Dict, Any, Callable, Tuple
 from uuid import UUID
 
 from database.connection import DatabaseManager
@@ -176,6 +176,20 @@ class InventoryController:
             logger.error(f"Error getting material {material_id}: {e}")
             return None
     
+    def search_inventory(self, search_term: str, category: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Search inventory items with real stock levels.
+
+        Returns:
+            List of dicts with id, sku, description, category, on_hand, available, status, storage_location
+        """
+        try:
+            filters = {'category': category} if category else None
+            return self.inventory_service.search_inventory(search_term, filters)
+        except Exception as e:
+            logger.error(f"Error searching inventory: {e}")
+            return []
+
     def search_materials(self, search_term: str, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Search materials.
@@ -313,6 +327,28 @@ class InventoryController:
             logger.error(f"Error getting inventory summary: {e}")
             return None
     
+    def get_material_transactions(self, material_id: UUID, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get transaction history for a specific material."""
+        try:
+            transactions = self.transaction_service.get_transactions_by_material(material_id, limit)
+            return [
+                {
+                    'date': t.transaction_date.strftime('%Y-%m-%d'),
+                    'type': t.transaction_type,
+                    'quantity': float(t.quantity),
+                    'reference': (
+                        f"{t.reference_type}-{t.reference_number}"
+                        if t.reference_number else (t.reference_type or '')
+                    ),
+                    'lot_number': t.lot_number or '',
+                    'notes': t.notes or ''
+                }
+                for t in transactions
+            ]
+        except Exception as e:
+            logger.error(f"Error getting material transactions for {material_id}: {e}")
+            return []
+
     def get_recent_transactions(self, limit: int = 50) -> List[Dict[str, Any]]:
         """
         Get recent inventory transactions.

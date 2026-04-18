@@ -6,9 +6,12 @@ Coordinates material and transaction operations for complete inventory managemen
 import logging
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from database.models.inventory import Material, InventoryTransaction, InventorySummary
+from sqlalchemy import func
+from database.models.inventory import (
+    Material, InventoryTransaction, InventorySummary, TransactionType
+)
 from database.connection import DatabaseManager
 from .material_service import MaterialService
 from .transaction_service import TransactionService
@@ -120,56 +123,48 @@ class InventoryService:
     def get_inventory_summary(self, material_id: UUID) -> Optional[Dict[str, Any]]:
         """
         Get complete inventory summary for a material.
-        
-        Args:
-            material_id: UUID of the material
-            
+
         Returns:
-            Dictionary with inventory information or None if not found
+            Dict with 'material' and 'inventory' keys, or None if not found
         """
         try:
-            material = self.material_service.get_material_by_id(material_id)
-            if not material:
-                return None
-            
-            # Get recent transactions
-            transactions = self.transaction_service.get_transactions_by_material(material_id, limit=10)
-            
-            # Get inventory summary (placeholder - would use actual summary table)
-            summary_data = {
-                'on_hand': 100,  # Placeholder
-                'committed': 0,
-                'available': 100,
-                'on_order': 0,
-                'total_value': 1000.00,  # Placeholder
-                'average_cost': 10.00  # Placeholder
-            }
-            
-            return {
-                'material': {
-                    'id': str(material.id),
-                    'sku': material.sku,
-                    'name': material.name,
-                    'description': material.description,
-                    'category': material.category,
-                    'unit_of_measure': material.unit_of_measure,
-                    'reorder_point': float(material.reorder_point or 0),
-                    'storage_location': material.storage_location,
-                    'notes': material.notes
-                },
-                'inventory': summary_data,
-                'recent_transactions': [
-                    {
-                        'date': t.transaction_date.strftime('%Y-%m-%d'),
-                        'type': t.transaction_type,
-                        'quantity': float(t.quantity),
-                        'reference': f"{t.reference_type}-{t.reference_number}" if t.reference_number else "",
-                        'notes': t.notes or ""
+            with self.db_manager.get_session() as session:
+                material = session.query(Material).filter(
+                    Material.id == material_id,
+                    Material.deleted_at.is_(None)
+                ).first()
+
+                if not material:
+                    return None
+
+                summary = session.query(InventorySummary).filter(
+                    InventorySummary.material_id == material_id
+                ).first()
+
+                return {
+                    'material': {
+                        'id': str(material.id),
+                        'sku': material.sku,
+                        'name': material.name,
+                        'description': material.description or '',
+                        'category': material.category,
+                        'unit_of_measure': material.unit_of_measure,
+                        'reorder_point': float(material.reorder_point or 0),
+                        'storage_location': material.storage_location or '',
+                        'preferred_supplier': material.preferred_supplier or '',
+                        'standard_cost': float(material.standard_cost) if material.standard_cost else None,
+                        'notes': material.notes or ''
+                    },
+                    'inventory': {
+                        'on_hand': float(summary.on_hand) if summary else 0.0,
+                        'committed': float(summary.committed) if summary else 0.0,
+                        'available': float(summary.available) if summary else 0.0,
+                        'on_order': float(summary.on_order) if summary else 0.0,
+                        'total_value': float(summary.total_value) if summary else 0.0,
+                        'average_cost': float(summary.average_unit_cost) if summary else 0.0,
                     }
-                    for t in transactions
-                ]
-            }
-            
+                }
+
         except Exception as e:
             logger.error(f"Failed to get inventory summary for {material_id}: {e}")
             return None
@@ -177,35 +172,64 @@ class InventoryService:
     def get_dashboard_data(self) -> Dict[str, Any]:
         """
         Get comprehensive dashboard data for inventory module.
-        
+
         Returns:
             Dictionary with dashboard information
         """
         try:
-            # Material statistics
-            material_stats = self.material_service.get_material_statistics()
-            
-            # Transaction statistics
-            transaction_stats = self.transaction_service.get_transaction_statistics()
-            
-            # Recent transactions
+            with self.db_manager.get_session() as session:
+                # Total active SKUs
+                total_skus = session.query(Material).filter(
+                    Material.deleted_at.is_(None),
+                    Material.active == True
+                ).count()
+
+                # Total inventory value from InventorySummary
+                total_value = session.query(
+                    func.sum(InventorySummary.total_value)
+                ).join(
+                    Material, InventorySummary.material_id == Material.id
+                ).filter(
+                    Material.deleted_at.is_(None),
+                    Material.active == True
+                ).scalar() or 0
+
+                # Low stock: available <= reorder_point (and reorder_point > 0)
+                low_stock_count = session.query(InventorySummary).join(
+                    Material, InventorySummary.material_id == Material.id
+                ).filter(
+                    Material.deleted_at.is_(None),
+                    Material.active == True,
+                    Material.reorder_point > 0,
+                    InventorySummary.available <= Material.reorder_point
+                ).count()
+
+                # Receiving transactions in the last 7 days
+                week_ago = datetime.utcnow() - timedelta(days=7)
+                recent_receiving = session.query(InventoryTransaction).filter(
+                    InventoryTransaction.transaction_type == TransactionType.RECEIVING.value,
+                    InventoryTransaction.transaction_date >= week_ago
+                ).count()
+
+                # Low stock material list (top 10)
+                low_stock_rows = session.query(Material, InventorySummary).join(
+                    InventorySummary, InventorySummary.material_id == Material.id
+                ).filter(
+                    Material.deleted_at.is_(None),
+                    Material.active == True,
+                    Material.reorder_point > 0,
+                    InventorySummary.available <= Material.reorder_point
+                ).limit(10).all()
+
+            # Recent activity is fetched via its own session
             recent_transactions = self.transaction_service.get_recent_transactions(limit=10)
-            
-            # Low stock materials
-            low_stock_materials = self.material_service.get_low_stock_materials()
-            
-            # Calculate total inventory value (placeholder)
-            total_value = 0.0
-            for material in self.material_service.get_all_materials():
-                # This would use actual inventory summary data
-                total_value += 1000.00  # Placeholder
-            
+
             return {
                 'summary_cards': {
-                    'total_skus': material_stats['total_materials'],
-                    'low_stock_items': material_stats['low_stock_count'],
-                    'total_value': f"${total_value:,.2f}",
-                    'recent_receiving': transaction_stats['weekly_receiving']
+                    'total_skus': total_skus,
+                    'low_stock_items': low_stock_count,
+                    'total_value': f"${float(total_value):,.2f}",
+                    'recent_receiving': recent_receiving
                 },
                 'recent_activity': recent_transactions,
                 'low_stock_materials': [
@@ -214,13 +238,14 @@ class InventoryService:
                         'name': m.name,
                         'category': m.category,
                         'reorder_point': float(m.reorder_point or 0),
-                        'current_stock': 50  # Placeholder - would use actual stock
+                        'on_hand': float(s.on_hand),
+                        'available': float(s.available)
                     }
-                    for m in low_stock_materials[:10]
+                    for m, s in low_stock_rows
                 ],
-                'category_breakdown': material_stats['category_counts']
+                'category_breakdown': {}
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get dashboard data: {e}")
             return {
@@ -237,50 +262,61 @@ class InventoryService:
     
     def search_inventory(self, search_term: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
-        Search inventory with optional filters.
-        
+        Search inventory with stock levels from InventorySummary.
+
         Args:
-            search_term: Search term for materials
-            filters: Optional filters (category, low_stock, etc.)
-            
+            search_term: Search term for SKU, name, or description
+            filters: Optional dict with keys 'category', 'low_stock'
+
         Returns:
-            List of material dictionaries with inventory information
+            List of material dicts including on_hand, available, and status
         """
         try:
-            # Get materials matching search
-            materials = self.material_service.search_materials(
-                search_term, 
-                filters.get('category') if filters else None
-            )
-            
-            results = []
-            for material in materials:
-                # Apply additional filters
-                if filters:
-                    if filters.get('low_stock') and not material.is_low_stock:
+            with self.db_manager.get_session() as session:
+                query = session.query(Material, InventorySummary).outerjoin(
+                    InventorySummary, InventorySummary.material_id == Material.id
+                ).filter(
+                    Material.deleted_at.is_(None),
+                    Material.active == True
+                )
+
+                if search_term:
+                    pattern = f"%{search_term}%"
+                    query = query.filter(
+                        (Material.sku.ilike(pattern)) |
+                        (Material.name.ilike(pattern)) |
+                        (Material.description.ilike(pattern))
+                    )
+
+                if filters and filters.get('category'):
+                    query = query.filter(Material.category == filters['category'])
+
+                query = query.order_by(Material.sku)
+
+                results = []
+                for material, summary in query.all():
+                    on_hand = float(summary.on_hand) if summary else 0.0
+                    available = float(summary.available) if summary else 0.0
+                    reorder_point = float(material.reorder_point) if material.reorder_point else 0.0
+
+                    is_low = reorder_point > 0 and available <= reorder_point
+                    if filters and filters.get('low_stock') and not is_low:
                         continue
-                
-                # Get inventory data (placeholder)
-                inventory_data = {
-                    'on_hand': 100,  # Placeholder
-                    'available': 100,
-                    'status': 'Normal' if not material.is_low_stock else 'Low Stock'
-                }
-                
-                results.append({
-                    'id': str(material.id),
-                    'sku': material.sku,
-                    'description': material.description,
-                    'category': material.category,
-                    'on_hand': inventory_data['on_hand'],
-                    'available': inventory_data['available'],
-                    'status': inventory_data['status'],
-                    'reorder_point': float(material.reorder_point or 0),
-                    'storage_location': material.storage_location or ''
-                })
-            
-            return results
-            
+
+                    results.append({
+                        'id': str(material.id),
+                        'sku': material.sku,
+                        'description': material.name,
+                        'category': material.category,
+                        'on_hand': on_hand,
+                        'available': available,
+                        'status': 'Low Stock' if is_low else 'Normal',
+                        'storage_location': material.storage_location or '',
+                        'reorder_point': reorder_point,
+                    })
+
+                return results
+
         except Exception as e:
             logger.error(f"Failed to search inventory: {e}")
             return []

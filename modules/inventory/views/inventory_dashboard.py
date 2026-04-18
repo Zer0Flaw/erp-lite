@@ -7,16 +7,16 @@ import logging
 from typing import Optional
 from uuid import UUID
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QScrollArea, QSizePolicy
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QFrame, QScrollArea, QSizePolicy, QDialog
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont
-
 from ui.components.data_table import DataTableWithFilter
 from ui.components.message_box import show_info, show_error, confirm_delete
-from ui.components.form_dialog import MaterialFormDialog
+from ui.components.form_dialog import MaterialFormDialog, ReceivingFormDialog
 from modules.inventory.controllers.inventory_controller import InventoryController
+from modules.inventory.views.material_detail import MaterialDetailView
 
 logger = logging.getLogger(__name__)
 
@@ -77,25 +77,35 @@ class InventoryDashboard(QWidget):
         header_widget = QWidget()
         header_layout = QHBoxLayout(header_widget)
         header_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         # Title
         title = QLabel("Inventory Dashboard")
         title.setProperty("class", "page-header")
         header_layout.addWidget(title)
-        
+
         header_layout.addStretch()
-        
+
         # Action buttons
         new_material_btn = QPushButton("New Material")
         new_material_btn.setProperty("class", "primary")
-        new_material_btn.clicked.connect(self.new_material_requested.emit)
+        new_material_btn.clicked.connect(self.create_new_material)
         header_layout.addWidget(new_material_btn)
-        
+
+        self.edit_material_btn = QPushButton("Edit Material")
+        self.edit_material_btn.setProperty("class", "secondary")
+        self.edit_material_btn.clicked.connect(self.edit_selected_material)
+        header_layout.addWidget(self.edit_material_btn)
+
+        self.delete_material_btn = QPushButton("Delete Material")
+        self.delete_material_btn.setProperty("class", "danger")
+        self.delete_material_btn.clicked.connect(self.delete_selected_material)
+        header_layout.addWidget(self.delete_material_btn)
+
         receiving_btn = QPushButton("Receive Materials")
         receiving_btn.setProperty("class", "accent")
-        receiving_btn.clicked.connect(self.receiving_requested.emit)
+        receiving_btn.clicked.connect(self.open_receiving_dialog)
         header_layout.addWidget(receiving_btn)
-        
+
         parent_layout.addWidget(header_widget)
     
     def setup_summary_cards(self, parent_layout) -> None:
@@ -246,12 +256,13 @@ class InventoryDashboard(QWidget):
         logger.info(f"Status: {message}")
     
     def on_material_double_clicked(self, row: int) -> None:
-        """Handle double-click on inventory item."""
+        """Handle double-click on inventory item — open detail dialog."""
         if self.inventory_table:
             selected_data = self.inventory_table.get_selected_data()
             if selected_data:
-                material = selected_data[0]
-                self.material_selected.emit(material.get('sku', ''))
+                material_id = selected_data[0].get('id', '')
+                if material_id:
+                    self.show_material_detail(material_id)
     
     def load_summary_data(self) -> None:
         """Load summary statistics."""
@@ -282,34 +293,10 @@ class InventoryDashboard(QWidget):
         """Load inventory items into table."""
         if not self.inventory_table:
             return
-        
+
         try:
-            # Get materials from controller
-            materials = self.controller.search_materials("", None)
-            
-            # Convert to table format
-            table_data = []
-            for material in materials:
-                # Get inventory summary (placeholder data for now)
-                inventory_data = {
-                    'on_hand': 100,  # Placeholder - would come from inventory summary
-                    'available': 100,
-                    'status': 'Normal' if not material.get('is_low_stock', False) else 'Low Stock'
-                }
-                
-                table_data.append({
-                    'sku': material['sku'],
-                    'description': material['name'],
-                    'category': material['category'],
-                    'on_hand': inventory_data['on_hand'],
-                    'available': inventory_data['available'],
-                    'status': inventory_data['status'],
-                    'storage_location': material['storage_location']
-                })
-            
-            # Load into table
-            self.inventory_table.load_data(table_data)
-            
+            items = self.controller.search_inventory("", None)
+            self.inventory_table.load_data(items)
         except Exception as e:
             logger.error(f"Error loading inventory items: {e}")
     
@@ -425,6 +412,59 @@ class InventoryDashboard(QWidget):
             show_error("Error", f"Failed to delete material: {e}")
     
         
+    def open_receiving_dialog(self) -> None:
+        """Open the Receive Materials form dialog."""
+        try:
+            material_options = self.controller.get_material_options()
+            if not material_options:
+                show_info("No Materials", "Add materials before logging a receipt.")
+                return
+
+            dialog = ReceivingFormDialog(material_options, parent=self)
+
+            if dialog.exec() == 1:
+                transaction_data = dialog.get_receiving_data()
+
+                if not transaction_data.get('material_id'):
+                    show_error("Error", "No material selected.")
+                    return
+
+                # Controller expects UUID, not string
+                transaction_data['material_id'] = UUID(transaction_data['material_id'])
+
+                success, message = self.controller.create_receiving_transaction(transaction_data)
+
+                if success:
+                    show_info("Success", message)
+                else:
+                    show_error("Error", message)
+
+        except Exception as e:
+            logger.error(f"Error opening receiving dialog: {e}")
+            show_error("Error", f"Failed to open receiving form: {e}")
+
+    def show_material_detail(self, material_id: str) -> None:
+        """Open MaterialDetailView in a modal dialog for the given material ID."""
+        try:
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Material Details")
+            dialog.resize(900, 660)
+            dialog.setModal(True)
+
+            layout = QVBoxLayout(dialog)
+            layout.setContentsMargins(0, 0, 0, 0)
+
+            detail_view = MaterialDetailView(self.db_manager, self.settings, parent=dialog)
+            detail_view.back_to_dashboard.connect(dialog.accept)
+            layout.addWidget(detail_view)
+
+            detail_view.load_material(material_id)
+            dialog.exec()
+
+        except Exception as e:
+            logger.error(f"Error opening material detail: {e}")
+            show_error("Error", f"Failed to open material details: {e}")
+
     def refresh_data(self) -> None:
         """Refresh all dashboard data."""
         self.load_data()

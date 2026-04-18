@@ -467,17 +467,69 @@ class MaterialFormDialog(FormDialog):
     def get_material_data(self) -> Dict[str, Any]:
         """Get material-specific form data."""
         data = self.get_form_data()
-        
+
         # Convert numeric fields appropriately
-        numeric_fields = ['weight_per_unit', 'reorder_point', 'max_stock_level', 
-                         'standard_cost', 'average_cost', 'last_cost', 
+        numeric_fields = ['weight_per_unit', 'reorder_point', 'max_stock_level',
+                         'standard_cost', 'average_cost', 'last_cost',
                          'expansion_ratio', 'density_target']
-        
+
         for field in numeric_fields:
             if field in data and data[field] is not None:
                 try:
                     data[field] = float(data[field])
                 except (ValueError, TypeError):
                     data[field] = None
-        
+
         return data
+
+
+class ReceivingFormDialog(FormDialog):
+    """Form dialog for logging a material receipt."""
+
+    def __init__(self, material_options: List[Dict[str, Any]], parent=None):
+        self._material_options = material_options
+        material_labels = [f"{m['sku']} \u2014 {m['name']}" for m in material_options]
+
+        fields = [
+            FormField('material_label', 'Material', 'select', required=True,
+                      options=material_labels),
+            FormField('quantity', 'Quantity Received', 'number', required=True,
+                      min_value=0.0001, max_value=999999, decimals=4),
+            FormField('lot_number', 'Lot Number', 'text',
+                      placeholder='e.g., LOT-2024-001'),
+            FormField('supplier', 'Supplier / PO Number', 'text',
+                      placeholder='e.g., Acme Corp or PO-1234'),
+            FormField('storage_location', 'Storage Location', 'text',
+                      placeholder='e.g., Aisle 1, Rack 2'),
+            FormField('notes', 'Notes', 'textarea'),
+        ]
+
+        super().__init__("Receive Materials", fields, parent)
+
+    def get_receiving_data(self) -> Dict[str, Any]:
+        """Return transaction-ready dict from form values."""
+        data = self.get_form_data()
+
+        # Resolve material_id from selected display label
+        selected_label = data.get('material_label', '')
+        material_id = None
+        for m in self._material_options:
+            if f"{m['sku']} \u2014 {m['name']}" == selected_label:
+                material_id = m['id']
+                break
+
+        notes = data.get('notes') or ''
+        storage_location = data.get('storage_location') or ''
+        if storage_location:
+            notes = f"Storage: {storage_location}" + (f"\n{notes}" if notes else '')
+
+        return {
+            'material_id': material_id,
+            'quantity': float(data.get('quantity') or 0),
+            'lot_number': data.get('lot_number') or '',
+            'reference_type': 'PO',
+            'reference_number': data.get('supplier') or '',
+            'notes': notes,
+            'transaction_type': 'Receiving',
+            'created_by': 'System',
+        }

@@ -269,6 +269,58 @@ class TimeEntryService:
             logger.error(f"Error getting time entry statistics: {e}")
             raise
     
+    def get_active_entries_for_display(self, employee_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get active entries serialized as dicts (safe after session close)."""
+        try:
+            with self.db_manager.get_session() as session:
+                query = session.query(TimeEntry).filter(
+                    TimeEntry.status == TimeEntryStatus.ACTIVE.value
+                )
+                if employee_id:
+                    query = query.filter(TimeEntry.employee_id == employee_id)
+                entries = query.order_by(TimeEntry.start_time.asc()).all()
+                return [
+                    {
+                        'id': e.id,
+                        'employee_id': e.employee_id,
+                        'employee_name': e.employee_name,
+                        'operation': e.operation,
+                        'station_id': e.station_id or '',
+                        'start_time': e.start_time,
+                        'work_order_id': e.work_order_id,
+                        'notes': e.notes or '',
+                    }
+                    for e in entries
+                ]
+        except Exception as e:
+            logger.error(f"Error getting active entries for display: {e}")
+            raise
+
+    def get_recent_completed_entries(self, hours: int = 24) -> List[Dict[str, Any]]:
+        """Get completed time entries from the last N hours, serialized as display dicts."""
+        try:
+            cutoff = datetime.now() - timedelta(hours=hours)
+            with self.db_manager.get_session() as session:
+                entries = session.query(TimeEntry).filter(
+                    TimeEntry.status == TimeEntryStatus.COMPLETED.value,
+                    TimeEntry.end_time >= cutoff
+                ).order_by(TimeEntry.end_time.desc()).limit(100).all()
+                return [
+                    {
+                        'employee_name': e.employee_name,
+                        'operation': e.operation.replace('_', ' ').title(),
+                        'station_id': e.station_id or '',
+                        'start_time': e.start_time.strftime('%H:%M') if e.start_time else '',
+                        'end_time': e.end_time.strftime('%H:%M') if e.end_time else '',
+                        'total_hours': f"{float(e.total_hours):.2f}h" if e.total_hours else '—',
+                        'status': 'Completed',
+                    }
+                    for e in entries
+                ]
+        except Exception as e:
+            logger.error(f"Error getting recent completed entries: {e}")
+            raise
+
     def get_operation_options(self) -> List[Dict[str, str]]:
         """Get available operation options for dropdown."""
         return [

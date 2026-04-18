@@ -72,6 +72,30 @@ class ShopFloorController:
             self._notify_status_message(f"Error clocking out: {str(e)}")
             raise
     
+    def get_active_entries_for_display(self, employee_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get active time entries as serialized dicts (session-safe)."""
+        try:
+            return self.time_entry_service.get_active_entries_for_display(employee_id)
+        except Exception as e:
+            logger.error(f"Error getting active entries for display: {e}")
+            raise
+
+    def get_recent_completed_entries(self, hours: int = 24) -> List[Dict[str, Any]]:
+        """Get completed entries from the last N hours as display dicts."""
+        try:
+            return self.time_entry_service.get_recent_completed_entries(hours)
+        except Exception as e:
+            logger.error(f"Error getting recent completed entries: {e}")
+            raise
+
+    def get_stations_for_clock_in(self) -> List[Dict[str, Any]]:
+        """Get stations available or running, suitable for the clock-in dropdown."""
+        try:
+            return self.station_management_service.get_stations_for_clock_in()
+        except Exception as e:
+            logger.error(f"Error getting clock-in stations: {e}")
+            raise
+
     def get_active_time_entries(self, employee_id: Optional[str] = None) -> List:
         """Get all active time entries."""
         try:
@@ -259,6 +283,68 @@ class ShopFloorController:
             self._notify_status_message(f"Error updating status: {str(e)}")
             raise
     
+    def get_all_stations(self, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all stations serialized as dicts."""
+        try:
+            return self.station_management_service.get_all_stations(status_filter)
+        except Exception as e:
+            logger.error(f"Error getting all stations: {e}")
+            raise
+
+    def update_station(self, station_id: str, **kwargs) -> Any:
+        """Update station details."""
+        try:
+            station = self.station_management_service.update_station(station_id, **kwargs)
+            self._notify_data_changed()
+            self._notify_status_message(f"Updated station {station_id}")
+            return station
+        except Exception as e:
+            logger.error(f"Error updating station: {e}")
+            self._notify_status_message(f"Error updating station: {str(e)}")
+            raise
+
+    def release_station_work(self, station_id: str) -> Any:
+        """Release current work assignment from a station."""
+        try:
+            station = self.station_management_service.release_station_work(station_id)
+            self._notify_data_changed()
+            self._notify_status_message(f"Released work from station {station_id}")
+            return station
+        except Exception as e:
+            logger.error(f"Error releasing station work: {e}")
+            self._notify_status_message(f"Error releasing work: {str(e)}")
+            raise
+
+    def update_maintenance(self, station_id: str, maintenance_hours: int,
+                           next_maintenance_date=None) -> Any:
+        """Update maintenance records for a station."""
+        try:
+            station = self.station_management_service.update_maintenance(
+                station_id=station_id,
+                maintenance_hours=maintenance_hours,
+                next_maintenance_date=next_maintenance_date
+            )
+            self._notify_data_changed()
+            self._notify_status_message(f"Updated maintenance for station {station_id}")
+            return station
+        except Exception as e:
+            logger.error(f"Error updating maintenance: {e}")
+            self._notify_status_message(f"Error updating maintenance: {str(e)}")
+            raise
+
+    def seed_default_stations(self) -> int:
+        """Seed default XPanda floor stations if none exist."""
+        try:
+            count = self.station_management_service.seed_default_stations()
+            if count > 0:
+                self._notify_data_changed()
+                self._notify_status_message(f"Seeded {count} default stations")
+            return count
+        except Exception as e:
+            logger.error(f"Error seeding default stations: {e}")
+            self._notify_status_message(f"Error seeding stations: {str(e)}")
+            raise
+
     def get_available_stations(self, station_type: Optional[str] = None) -> List:
         """Get available stations."""
         try:

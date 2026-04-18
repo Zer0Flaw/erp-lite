@@ -342,6 +342,117 @@ class StationManagementService:
             {'value': StationStatus.CLEANUP.value, 'label': 'Cleanup'}
         ]
     
+    def get_all_stations(self, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all stations serialized as dicts (session-safe), optionally filtered by status."""
+        try:
+            with self.db_manager.get_session() as session:
+                query = session.query(ProductionStation).order_by(ProductionStation.station_id)
+                if status_filter:
+                    query = query.filter(ProductionStation.status == status_filter)
+                stations = query.all()
+                return [
+                    {
+                        'station_id': s.station_id,
+                        'name': s.name,
+                        'station_type': s.station_type,
+                        'status': s.status,
+                        'location': s.location or '',
+                        'department': s.department or '',
+                        'capacity_per_hour': float(s.capacity_per_hour) if s.capacity_per_hour else 0.0,
+                        'current_operator_name': s.current_operator_name or '',
+                        'total_runtime_hours': float(s.total_runtime_hours) if s.total_runtime_hours else 0.0,
+                        'notes': s.notes or '',
+                        'max_block_size': s.max_block_size or '',
+                        'temperature_range': s.temperature_range or '',
+                    }
+                    for s in stations
+                ]
+        except Exception as e:
+            logger.error(f"Error getting all stations: {e}")
+            raise
+
+    def update_station(self, station_id: str, **kwargs) -> ProductionStation:
+        """Update editable fields of an existing station."""
+        try:
+            with self.db_manager.get_session() as session:
+                station = session.query(ProductionStation).filter(
+                    ProductionStation.station_id == station_id
+                ).first()
+                if not station:
+                    raise ValueError(f"Station {station_id} not found")
+
+                allowed = {'name', 'station_type', 'location', 'department',
+                           'capacity_per_hour', 'max_block_size', 'temperature_range', 'notes', 'status'}
+                for key, value in kwargs.items():
+                    if key in allowed:
+                        setattr(station, key, value)
+
+                session.commit()
+                session.refresh(station)
+                logger.info(f"Updated station {station_id}")
+                return station
+        except Exception as e:
+            logger.error(f"Error updating station: {e}")
+            raise
+
+    def seed_default_stations(self) -> int:
+        """Seed default XPanda floor stations if none exist. Returns number of stations created."""
+        try:
+            with self.db_manager.get_session() as session:
+                if session.query(ProductionStation).count() > 0:
+                    return 0
+
+                defaults = [
+                    ('PRE-EXP-01', 'Pre-Expander',    StationType.PRE_EXPANDER.value,   'Production Floor'),
+                    ('MOLD-01',    'Block Mold 1',     StationType.BLOCK_MOLD.value,      'Production Floor'),
+                    ('MOLD-02',    'Block Mold 2',     StationType.BLOCK_MOLD.value,      'Production Floor'),
+                    ('SILO-01',    'Aging Silo 1',     StationType.AGING_SILO.value,      'Production Floor'),
+                    ('SILO-02',    'Aging Silo 2',     StationType.AGING_SILO.value,      'Production Floor'),
+                    ('CUT-01',     'Hot Wire Cutter',  StationType.HOT_WIRE_CUTTER.value, 'Cutting Area'),
+                    ('CNC-01',     'CNC Router',       StationType.CNC_ROUTER.value,      'Cutting Area'),
+                    ('SAW-01',     'Band Saw',         StationType.BAND_SAW.value,        'Cutting Area'),
+                    ('PKG-01',     'Packaging',        StationType.PACKAGING.value,       'Packaging Area'),
+                    ('QC-01',      'Inspection',       StationType.INSPECTION.value,      'Quality Area'),
+                ]
+
+                for station_id, name, station_type, location in defaults:
+                    session.add(ProductionStation(
+                        station_id=station_id,
+                        name=name,
+                        station_type=station_type,
+                        status=StationStatus.AVAILABLE.value,
+                        location=location,
+                    ))
+
+                session.commit()
+                logger.info(f"Seeded {len(defaults)} default stations")
+                return len(defaults)
+        except Exception as e:
+            logger.error(f"Error seeding default stations: {e}")
+            raise
+
+    def get_stations_for_clock_in(self) -> List[Dict[str, Any]]:
+        """Get stations with available or running status for the clock-in dropdown."""
+        try:
+            with self.db_manager.get_session() as session:
+                stations = session.query(ProductionStation).filter(
+                    ProductionStation.status.in_([
+                        StationStatus.AVAILABLE.value,
+                        StationStatus.RUNNING.value,
+                    ])
+                ).order_by(ProductionStation.station_id).all()
+                return [
+                    {
+                        'station_id': s.station_id,
+                        'name': s.name,
+                        'status': s.status,
+                    }
+                    for s in stations
+                ]
+        except Exception as e:
+            logger.error(f"Error getting clock-in stations: {e}")
+            raise
+
     def search_stations(self, search_term: str, limit: int = 100) -> List[ProductionStation]:
         """Search stations by name, location, or station ID."""
         try:

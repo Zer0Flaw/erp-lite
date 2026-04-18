@@ -5,530 +5,593 @@ Touch-friendly interface for shop floor time tracking.
 
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Optional, Dict, Any, List
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QScrollArea, QSizePolicy,
-    QComboBox, QLineEdit, QTextEdit, QGridLayout,
-    QGroupBox, QSpacerItem, QListWidget, QListWidgetItem,
-    QProgressBar, QSplitter
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QFrame,
+    QComboBox, QLineEdit, QTextEdit,
+    QGroupBox, QListWidget, QListWidgetItem,
+    QDialog, QSplitter
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, pyqtSlot
-from PyQt6.QtGui import QFont, QPalette, QColor
 
 from ui.components.data_table import DataTableWithFilter
-from ui.components.message_box import show_info, show_error, confirm_delete
+from ui.components.message_box import show_info, show_error
 from modules.shop_floor.controllers.shop_floor_controller import ShopFloorController
 
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _format_hms(total_seconds: int) -> str:
+    """Format a duration in seconds as HH:MM:SS."""
+    total_seconds = max(0, int(total_seconds))
+    h = total_seconds // 3600
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
+def _readable_operation(raw: str) -> str:
+    return raw.replace('_', ' ').title()
+
+
+# ---------------------------------------------------------------------------
+# Clock-out selection dialog (shown when employee has multiple active entries)
+# ---------------------------------------------------------------------------
+
+class ActiveEntrySelectionDialog(QDialog):
+    """Let the employee pick which active job to clock out."""
+
+    def __init__(self, entries: List[Dict[str, Any]], parent=None):
+        super().__init__(parent)
+        self.selected_entry_id: Optional[int] = None
+        self._entries = entries
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        self.setWindowTitle("Select Job to Clock Out")
+        self.setModal(True)
+        self.setMinimumWidth(440)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        lbl = QLabel("Multiple active jobs found. Pick which one to clock out:")
+        lbl.setWordWrap(True)
+        layout.addWidget(lbl)
+
+        self._list = QListWidget()
+        self._list.setMinimumHeight(160)
+        now = datetime.now()
+        for e in self._entries:
+            elapsed = int((now - e['start_time']).total_seconds())
+            parts = [
+                _readable_operation(e['operation']),
+                f"Elapsed: {_format_hms(elapsed)}",
+                f"Since: {e['start_time'].strftime('%H:%M')}",
+            ]
+            if e.get('station_id'):
+                parts.append(f"Station: {e['station_id']}")
+            item = QListWidgetItem("  |  ".join(parts))
+            item.setData(Qt.ItemDataRole.UserRole, e['id'])
+            self._list.addItem(item)
+        self._list.setCurrentRow(0)
+        layout.addWidget(self._list)
+
+        btn_row = QHBoxLayout()
+        ok_btn = QPushButton("Clock Out Selected")
+        ok_btn.setProperty("class", "primary")
+        ok_btn.setMinimumHeight(48)
+        ok_btn.clicked.connect(self._accept_selection)
+        btn_row.addWidget(ok_btn)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setProperty("class", "secondary")
+        cancel_btn.setMinimumHeight(48)
+        cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(cancel_btn)
+        layout.addLayout(btn_row)
+
+    def _accept_selection(self) -> None:
+        item = self._list.currentItem()
+        if item:
+            self.selected_entry_id = item.data(Qt.ItemDataRole.UserRole)
+            self.accept()
+
+
+# ---------------------------------------------------------------------------
+# Background timer thread
+# ---------------------------------------------------------------------------
+
 class LiveTimerThread(QThread):
-    """Thread for updating live timers."""
-    update_timer = pyqtSignal(dict)
-    
-    def __init__(self, controller):
+    """Polls active entries every second and emits serialized data with elapsed seconds."""
+    tick = pyqtSignal(list)   # list of entry dicts, each with 'elapsed_seconds' added
+
+    def __init__(self, controller: ShopFloorController):
         super().__init__()
         self.controller = controller
-        self.running = True
-        self.active_entries = []
-    
-    def run(self):
-        while self.running:
-            try:
-                # Get active time entries
-                active_entries = self.controller.get_active_time_entries()
-                
-                # Calculate elapsed times
-                timer_data = {}
-                for entry in active_entries:
-                    elapsed = self.controller.time_entry_service.calculate_elapsed_time(entry)
-                    timer_data[entry.id] = {
-                        'employee_name': entry.employee_name,
-                        'operation': entry.operation,
-                        'elapsed_hours': elapsed['elapsed_hours'],
-                        'elapsed_minutes': elapsed['elapsed_minutes'],
-                        'elapsed_seconds': elapsed['elapsed_seconds'],
-                        'start_time': elapsed['start_time']
-                    }
-                
-                self.update_timer.emit(timer_data)
-                self.active_entries = active_entries
-                
-                # Update every second
-                self.msleep(1000)
-                
-            except Exception as e:
-                logger.error(f"Error in timer thread: {e}")
-                self.msleep(5000)  # Wait 5 seconds on error
-    
-    def stop(self):
-        self.running = False
+        self._running = True
 
+    def run(self) -> None:
+        while self._running:
+            try:
+                entries = self.controller.get_active_entries_for_display()
+                now = datetime.now()
+                for e in entries:
+                    e['elapsed_seconds'] = int((now - e['start_time']).total_seconds())
+                self.tick.emit(entries)
+                self.msleep(1000)
+            except Exception as ex:
+                logger.error(f"LiveTimerThread error: {ex}")
+                self.msleep(5000)
+
+    def stop(self) -> None:
+        self._running = False
+
+
+# ---------------------------------------------------------------------------
+# Main view
+# ---------------------------------------------------------------------------
 
 class JobClockView(QWidget):
-    """Main job clock view with touch-friendly interface."""
-    
+    """Touch-friendly job clock for shop floor time tracking."""
+
     def __init__(self, db_manager, settings, parent=None):
         super().__init__(parent)
-        
+
         self.db_manager = db_manager
         self.settings = settings
         self.controller = ShopFloorController(db_manager)
-        
-        # UI components
-        self.timer_thread = LiveTimerThread(self.controller)
-        self.timer_thread.update_timer.connect(self.update_live_timers)
-        
-        # Data
-        self.active_timers = {}  # Store timer data
-        self.operation_options = []
-        self.station_options = []
-        
-        self.setup_ui()
-        self.setup_connections()
-        self.load_initial_data()
-        
-        # Start timer thread
-        self.timer_thread.start()
-        
+
+        # Live data
+        self._active_entries: List[Dict[str, Any]] = []
+
+        # Debounce timer for clock-out button state (avoids DB hit on every keypress)
+        self._clock_out_check_timer = QTimer()
+        self._clock_out_check_timer.setSingleShot(True)
+        self._clock_out_check_timer.setInterval(450)
+        self._clock_out_check_timer.timeout.connect(self._check_clock_out_eligibility)
+
+        # Background timer thread
+        self._timer_thread = LiveTimerThread(self.controller)
+        self._timer_thread.tick.connect(self._on_timer_tick)
+
+        self._build_ui()
+        self._connect_signals()
+        self._load_initial_data()
+
+        self._timer_thread.start()
         logger.debug("Job clock view initialized")
-    
-    def setup_ui(self) -> None:
-        """Create touch-friendly UI layout."""
-        # Main layout with larger spacing for touch
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
-        
-        # Header
-        self.setup_header(main_layout)
-        
-        # Clock in/out section
-        self.setup_clock_section(main_layout)
-        
-        # Active jobs section
-        self.setup_active_jobs_section(main_layout)
-        
-        # Recent activity section
-        self.setup_recent_activity_section(main_layout)
-    
-    def setup_header(self, parent_layout) -> None:
-        """Create view header."""
-        header_widget = QWidget()
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Title
+
+    # ------------------------------------------------------------------
+    # UI construction
+    # ------------------------------------------------------------------
+
+    def _build_ui(self) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
+
+        self._build_header(layout)
+        self._build_clock_section(layout)
+        self._build_active_jobs_section(layout)
+        self._build_recent_activity_section(layout)
+
+    def _build_header(self, parent_layout) -> None:
+        row = QWidget()
+        hl = QHBoxLayout(row)
+        hl.setContentsMargins(0, 0, 0, 0)
+
         title = QLabel("Job Clock")
         title.setProperty("class", "page-header")
-        header_layout.addWidget(title)
-        
-        header_layout.addStretch()
-        
-        # Current time display
-        self.time_label = QLabel()
-        self.time_label.setProperty("class", "page-header")
-        self.time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        header_layout.addWidget(self.time_label)
-        
-        parent_layout.addWidget(header_widget)
-    
-    def setup_clock_section(self, parent_layout) -> None:
-        """Create clock in/out section with large touch targets."""
-        # Clock in/out form
-        clock_frame = QFrame()
-        clock_frame.setProperty("class", "form-section")
-        clock_layout = QVBoxLayout(clock_frame)
-        clock_layout.setSpacing(15)
-        
-        # Title
-        form_title = QLabel("Clock In / Out")
-        form_title.setProperty("class", "section-header")
-        clock_layout.addWidget(form_title)
-        
-        # Employee info section
-        employee_layout = QHBoxLayout()
-        
-        # Employee ID/Name input
-        employee_group = QGroupBox("Employee")
-        employee_group.setProperty("class", "form-group")
-        employee_group_layout = QVBoxLayout(employee_group)
-        
-        self.employee_input = QLineEdit()
-        self.employee_input.setPlaceholderText("Enter Employee ID or Name")
-        self.employee_input.setMinimumHeight(50)  # Large touch target
-        self.employee_input.setProperty("class", "form-input")
-        employee_group_layout.addWidget(self.employee_input)
-        
-        employee_layout.addWidget(employee_group)
-        
-        # Work order input
-        work_order_group = QGroupBox("Work Order (Optional)")
-        work_order_group.setProperty("class", "form-group")
-        work_order_group_layout = QVBoxLayout(work_order_group)
-        
-        self.work_order_input = QLineEdit()
-        self.work_order_input.setPlaceholderText("Enter Work Order #")
-        self.work_order_input.setMinimumHeight(50)
-        self.work_order_input.setProperty("class", "form-input")
-        work_order_group_layout.addWidget(self.work_order_input)
-        
-        employee_layout.addWidget(work_order_group)
-        
-        clock_layout.addLayout(employee_layout)
-        
-        # Operation and station selection
-        selection_layout = QHBoxLayout()
-        
-        # Operation dropdown
-        operation_group = QGroupBox("Operation")
-        operation_group.setProperty("class", "form-group")
-        operation_group_layout = QVBoxLayout(operation_group)
-        
-        self.operation_combo = QComboBox()
-        self.operation_combo.setMinimumHeight(50)
-        self.operation_combo.setProperty("class", "form-select")
-        operation_group_layout.addWidget(self.operation_combo)
-        
-        selection_layout.addWidget(operation_group)
-        
-        # Station dropdown
-        station_group = QGroupBox("Station (Optional)")
-        station_group.setProperty("class", "form-group")
-        station_group_layout = QVBoxLayout(station_group)
-        
-        self.station_combo = QComboBox()
-        self.station_combo.setMinimumHeight(50)
-        self.station_combo.setProperty("class", "form-select")
-        station_group_layout.addWidget(self.station_combo)
-        
-        selection_layout.addWidget(station_group)
-        
-        clock_layout.addLayout(selection_layout)
-        
-        # Notes section
-        notes_group = QGroupBox("Notes (Optional)")
+        hl.addWidget(title)
+        hl.addStretch()
+
+        self._clock_label = QLabel()
+        self._clock_label.setProperty("class", "page-header")
+        self._clock_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        hl.addWidget(self._clock_label)
+
+        parent_layout.addWidget(row)
+
+    def _build_clock_section(self, parent_layout) -> None:
+        frame = QFrame()
+        frame.setProperty("class", "form-section")
+        fl = QVBoxLayout(frame)
+        fl.setSpacing(12)
+
+        sec_title = QLabel("Clock In / Out")
+        sec_title.setProperty("class", "section-header")
+        fl.addWidget(sec_title)
+
+        # Row 1: Employee + Work Order
+        row1 = QHBoxLayout()
+
+        emp_group = QGroupBox("Employee Name / ID")
+        emp_group.setProperty("class", "form-group")
+        eg_layout = QVBoxLayout(emp_group)
+        self._employee_input = QLineEdit()
+        self._employee_input.setPlaceholderText("Enter your name or badge ID")
+        self._employee_input.setMinimumHeight(50)
+        self._employee_input.setProperty("class", "form-input")
+        eg_layout.addWidget(self._employee_input)
+        row1.addWidget(emp_group)
+
+        wo_group = QGroupBox("Work Order # (optional)")
+        wo_group.setProperty("class", "form-group")
+        wo_layout = QVBoxLayout(wo_group)
+        self._work_order_input = QLineEdit()
+        self._work_order_input.setPlaceholderText("e.g. 1042")
+        self._work_order_input.setMinimumHeight(50)
+        self._work_order_input.setProperty("class", "form-input")
+        wo_layout.addWidget(self._work_order_input)
+        row1.addWidget(wo_group)
+
+        fl.addLayout(row1)
+
+        # Row 2: Operation + Station
+        row2 = QHBoxLayout()
+
+        op_group = QGroupBox("Operation")
+        op_group.setProperty("class", "form-group")
+        op_layout = QVBoxLayout(op_group)
+        self._operation_combo = QComboBox()
+        self._operation_combo.setMinimumHeight(50)
+        self._operation_combo.setProperty("class", "form-select")
+        op_layout.addWidget(self._operation_combo)
+        row2.addWidget(op_group)
+
+        st_group = QGroupBox("Station (optional)")
+        st_group.setProperty("class", "form-group")
+        st_layout = QVBoxLayout(st_group)
+        self._station_combo = QComboBox()
+        self._station_combo.setMinimumHeight(50)
+        self._station_combo.setProperty("class", "form-select")
+        st_layout.addWidget(self._station_combo)
+        row2.addWidget(st_group)
+
+        fl.addLayout(row2)
+
+        # Notes
+        notes_group = QGroupBox("Notes (optional)")
         notes_group.setProperty("class", "form-group")
-        notes_group_layout = QVBoxLayout(notes_group)
-        
-        self.notes_input = QTextEdit()
-        self.notes_input.setPlaceholderText("Enter any notes...")
-        self.notes_input.setMaximumHeight(80)
-        self.notes_input.setProperty("class", "form-input")
-        notes_group_layout.addWidget(self.notes_input)
-        
-        clock_layout.addWidget(notes_group)
-        
-        # Large clock in/out buttons
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(20)
-        
-        self.clock_in_btn = QPushButton("CLOCK IN")
-        self.clock_in_btn.setMinimumHeight(80)  # Very large touch target
-        self.clock_in_btn.setProperty("class", "primary")
-        self.clock_in_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_layout.addWidget(self.clock_in_btn)
-        
-        self.clock_out_btn = QPushButton("CLOCK OUT")
-        self.clock_out_btn.setMinimumHeight(80)
-        self.clock_out_btn.setProperty("class", "accent")
-        self.clock_out_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.clock_out_btn.setEnabled(False)
-        button_layout.addWidget(self.clock_out_btn)
-        
-        clock_layout.addLayout(button_layout)
-        
-        parent_layout.addWidget(clock_frame)
-    
-    def setup_active_jobs_section(self, parent_layout) -> None:
-        """Create active jobs section with live timers."""
-        # Active jobs frame
-        active_frame = QFrame()
-        active_frame.setProperty("class", "form-section")
-        active_layout = QVBoxLayout(active_frame)
-        active_layout.setSpacing(15)
-        
-        # Title
-        active_title = QLabel("Active Jobs")
-        active_title.setProperty("class", "section-header")
-        active_layout.addWidget(active_title)
-        
-        # Active jobs list with timers
-        self.active_jobs_list = QListWidget()
-        self.active_jobs_list.setMinimumHeight(200)
-        self.active_jobs_list.setProperty("class", "data-list")
-        active_layout.addWidget(self.active_jobs_list)
-        
-        parent_layout.addWidget(active_frame)
-    
-    def setup_recent_activity_section(self, parent_layout) -> None:
-        """Create recent activity section."""
-        # Recent activity frame
-        recent_frame = QFrame()
-        recent_frame.setProperty("class", "form-section")
-        recent_layout = QVBoxLayout(recent_frame)
-        recent_layout.setSpacing(15)
-        
-        # Title
-        recent_title = QLabel("Recent Activity")
-        recent_title.setProperty("class", "section-header")
-        recent_layout.addWidget(recent_title)
-        
-        # Recent activity table
-        self.recent_table = DataTableWithFilter()
-        
-        # Configure columns
-        columns = [
-            {'key': 'employee_name', 'title': 'Employee', 'width': 150},
-            {'key': 'operation', 'title': 'Operation', 'width': 120},
-            {'key': 'start_time', 'title': 'Start Time', 'width': 150},
-            {'key': 'end_time', 'title': 'End Time', 'width': 150},
-            {'key': 'total_hours', 'title': 'Hours', 'width': 80},
-            {'key': 'status', 'title': 'Status', 'width': 100}
-        ]
-        
-        self.recent_table.set_columns(columns)
-        self.recent_table.data_table.setMaximumHeight(250)
-        
-        recent_layout.addWidget(self.recent_table)
-        parent_layout.addWidget(recent_frame)
-    
-    def setup_connections(self) -> None:
-        """Connect signals and slots."""
-        self.clock_in_btn.clicked.connect(self.clock_in)
-        self.clock_out_btn.clicked.connect(self.clock_out)
-        
-        # Enable/disable clock out button based on active entries
-        self.employee_input.textChanged.connect(self.update_button_states)
-        self.operation_combo.currentTextChanged.connect(self.update_button_states)
-        
-        # Setup callbacks
-        self.controller.register_data_changed_callback(self.on_data_changed)
-        self.controller.register_status_message_callback(self.on_status_message)
-        
-        # Update current time every second
-        self.time_timer = QTimer()
-        self.time_timer.timeout.connect(self.update_current_time)
-        self.time_timer.start(1000)
-        self.update_current_time()
-    
-    def load_initial_data(self) -> None:
-        """Load initial data."""
+        notes_layout = QVBoxLayout(notes_group)
+        self._notes_input = QTextEdit()
+        self._notes_input.setPlaceholderText("Any notes for this job...")
+        self._notes_input.setMaximumHeight(72)
+        self._notes_input.setProperty("class", "form-input")
+        notes_layout.addWidget(self._notes_input)
+        fl.addWidget(notes_group)
+
+        # Big buttons
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(16)
+
+        self._clock_in_btn = QPushButton("CLOCK IN")
+        self._clock_in_btn.setMinimumHeight(80)
+        self._clock_in_btn.setProperty("class", "primary")
+        self._clock_in_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._clock_in_btn.setEnabled(False)
+        btn_row.addWidget(self._clock_in_btn)
+
+        self._clock_out_btn = QPushButton("CLOCK OUT")
+        self._clock_out_btn.setMinimumHeight(80)
+        self._clock_out_btn.setProperty("class", "accent")
+        self._clock_out_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._clock_out_btn.setEnabled(False)
+        btn_row.addWidget(self._clock_out_btn)
+
+        fl.addLayout(btn_row)
+        parent_layout.addWidget(frame)
+
+    def _build_active_jobs_section(self, parent_layout) -> None:
+        frame = QFrame()
+        frame.setProperty("class", "form-section")
+        fl = QVBoxLayout(frame)
+        fl.setSpacing(8)
+
+        hdr = QHBoxLayout()
+        title = QLabel("Active Jobs")
+        title.setProperty("class", "section-header")
+        hdr.addWidget(title)
+        hdr.addStretch()
+
+        self._active_count_label = QLabel("0 active")
+        self._active_count_label.setProperty("class", "secondary-text")
+        hdr.addWidget(self._active_count_label)
+        fl.addLayout(hdr)
+
+        self._active_jobs_list = QListWidget()
+        self._active_jobs_list.setMinimumHeight(160)
+        self._active_jobs_list.setProperty("class", "data-list")
+        fl.addWidget(self._active_jobs_list)
+
+        parent_layout.addWidget(frame)
+
+    def _build_recent_activity_section(self, parent_layout) -> None:
+        frame = QFrame()
+        frame.setProperty("class", "form-section")
+        fl = QVBoxLayout(frame)
+        fl.setSpacing(8)
+
+        hdr = QHBoxLayout()
+        title = QLabel("Recent Activity (last 24 h)")
+        title.setProperty("class", "section-header")
+        hdr.addWidget(title)
+        hdr.addStretch()
+
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setProperty("class", "secondary")
+        refresh_btn.clicked.connect(self._load_recent_activity)
+        hdr.addWidget(refresh_btn)
+        fl.addLayout(hdr)
+
+        self._recent_table = DataTableWithFilter()
+        self._recent_table.set_columns([
+            {'key': 'employee_name', 'title': 'Employee',  'width': 130},
+            {'key': 'operation',     'title': 'Operation', 'width': 110},
+            {'key': 'station_id',    'title': 'Station',   'width': 90},
+            {'key': 'start_time',    'title': 'Start',     'width': 65},
+            {'key': 'end_time',      'title': 'End',       'width': 65},
+            {'key': 'total_hours',   'title': 'Hours',     'width': 65},
+            {'key': 'status',        'title': 'Status',    'width': 85},
+        ])
+        self._recent_table.data_table.setMaximumHeight(220)
+        fl.addWidget(self._recent_table)
+
+        parent_layout.addWidget(frame)
+
+    # ------------------------------------------------------------------
+    # Signals & initial load
+    # ------------------------------------------------------------------
+
+    def _connect_signals(self) -> None:
+        self._clock_in_btn.clicked.connect(self._clock_in)
+        self._clock_out_btn.clicked.connect(self._clock_out)
+
+        self._employee_input.textChanged.connect(self._on_employee_changed)
+        self._operation_combo.currentIndexChanged.connect(self._refresh_clock_in_btn)
+
+        self.controller.register_data_changed_callback(self._on_data_changed)
+        self.controller.register_status_message_callback(self._on_status_message)
+
+        # Wall-clock display
+        self._wall_clock_timer = QTimer()
+        self._wall_clock_timer.timeout.connect(self._update_wall_clock)
+        self._wall_clock_timer.start(1000)
+        self._update_wall_clock()
+
+    def _load_initial_data(self) -> None:
         try:
-            # Load operation options
-            self.operation_options = self.controller.get_operation_options()
-            self.operation_combo.clear()
-            self.operation_combo.addItem("Select Operation...", "")
-            for option in self.operation_options:
-                self.operation_combo.addItem(option['label'], option['value'])
-            
-            # Load available stations
+            # Operation dropdown
+            ops = self.controller.get_operation_options()
+            self._operation_combo.clear()
+            self._operation_combo.addItem("Select operation...", "")
+            for opt in ops:
+                self._operation_combo.addItem(opt['label'], opt['value'])
+
+            # Station dropdown
+            self._reload_station_combo()
+
+            # Tables
+            self._load_active_jobs()
+            self._load_recent_activity()
+
+        except Exception as ex:
+            logger.error(f"Error loading initial data: {ex}")
+
+    def _reload_station_combo(self) -> None:
+        """Refresh the station dropdown from DB (available + running stations)."""
+        try:
+            stations = self.controller.get_stations_for_clock_in()
+            self._station_combo.clear()
+            self._station_combo.addItem("No station", "")
+            for s in stations:
+                label = f"{s['station_id']} — {s['name']}"
+                self._station_combo.addItem(label, s['station_id'])
+        except Exception as ex:
+            logger.warning(f"Could not load station list: {ex}")
+            self._station_combo.clear()
+            self._station_combo.addItem("No stations available", "")
+
+    # ------------------------------------------------------------------
+    # Clock In
+    # ------------------------------------------------------------------
+
+    def _clock_in(self) -> None:
+        employee = self._employee_input.text().strip()
+        if not employee:
+            show_error("Missing Field", "Please enter your name or ID.", parent=self)
+            return
+
+        operation = self._operation_combo.currentData()
+        if not operation:
+            show_error("Missing Field", "Please select an operation.", parent=self)
+            return
+
+        # Optional work order
+        work_order_id = None
+        wo_text = self._work_order_input.text().strip()
+        if wo_text:
             try:
-                available_stations = self.controller.get_available_stations()
-                self.station_combo.clear()
-                self.station_combo.addItem("Select Station...", "")
-                for station in available_stations:
-                    self.station_combo.addItem(f"{station.station_id} - {station.name}", station.station_id)
-            except Exception as e:
-                logger.warning(f"Could not load stations: {e}")
-                self.station_combo.clear()
-                self.station_combo.addItem("No stations available", "")
-            
-            # Load recent activity
-            self.load_recent_activity()
-            
-            # Load active jobs
-            self.load_active_jobs()
-            
-        except Exception as e:
-            logger.error(f"Error loading initial data: {e}")
-    
-    def clock_in(self) -> None:
-        """Handle clock in action."""
+                work_order_id = int(wo_text)
+            except ValueError:
+                show_error("Invalid Input", "Work Order # must be a number.", parent=self)
+                return
+
+        station_id = self._station_combo.currentData() or None
+        notes = self._notes_input.toPlainText().strip() or None
+
         try:
-            employee_id = self.employee_input.text().strip()
-            if not employee_id:
-                show_error("Please enter employee ID or name")
-                return
-            
-            operation_data = self.operation_combo.currentData()
-            if not operation_data:
-                show_error("Please select an operation")
-                return
-            
-            # Parse work order if provided
-            work_order_id = None
-            work_order_text = self.work_order_input.text().strip()
-            if work_order_text:
-                try:
-                    work_order_id = int(work_order_text)
-                except ValueError:
-                    show_error("Invalid work order number")
-                    return
-            
-            # Get station if selected
-            station_id = self.station_combo.currentData() or None
-            
-            # Get notes
-            notes = self.notes_input.toPlainText().strip()
-            
-            # Clock in
             self.controller.clock_in_operator(
-                employee_id=employee_id,
-                employee_name=employee_id,  # In a real app, would look up full name
+                employee_id=employee,
+                employee_name=employee,
                 work_order_id=work_order_id,
-                operation=operation_data,
+                operation=operation,
                 station_id=station_id,
-                notes=notes
+                notes=notes,
             )
-            
-            # Clear form
-            self.clear_form()
-            
-        except Exception as e:
-            logger.error(f"Error clocking in: {e}")
-            show_error(f"Error clocking in: {str(e)}")
-    
-    def clock_out(self) -> None:
-        """Handle clock out action."""
+            self._clear_form()
+            self._reload_station_combo()
+        except Exception as ex:
+            logger.error(f"Clock-in error: {ex}")
+            show_error("Clock In Error", str(ex), parent=self)
+
+    # ------------------------------------------------------------------
+    # Clock Out
+    # ------------------------------------------------------------------
+
+    def _clock_out(self) -> None:
+        employee = self._employee_input.text().strip()
+        if not employee:
+            show_error("Missing Field", "Please enter your name or ID.", parent=self)
+            return
+
         try:
-            employee_id = self.employee_input.text().strip()
-            if not employee_id:
-                show_error("Please enter employee ID to clock out")
-                return
-            
-            # Get active entries for this employee
-            active_entries = self.controller.get_active_time_entries(employee_id)
-            
-            if not active_entries:
-                show_error("No active time entries found for this employee")
-                return
-            
-            if len(active_entries) == 1:
-                # Clock out the single entry
-                entry = active_entries[0]
-                self.controller.clock_out_operator(entry.id)
-            else:
-                # Multiple entries - show selection dialog
-                # For now, clock out the most recent one
-                entry = active_entries[0]  # Most recent
-                self.controller.clock_out_operator(entry.id)
-            
-            # Clear form
-            self.clear_form()
-            
-        except Exception as e:
-            logger.error(f"Error clocking out: {e}")
-            show_error(f"Error clocking out: {str(e)}")
-    
-    def clear_form(self) -> None:
-        """Clear the clock form."""
-        self.employee_input.clear()
-        self.work_order_input.clear()
-        self.operation_combo.setCurrentIndex(0)
-        self.station_combo.setCurrentIndex(0)
-        self.notes_input.clear()
-        self.update_button_states()
-    
-    def update_button_states(self) -> None:
-        """Update button enabled states."""
-        employee_filled = bool(self.employee_input.text().strip())
-        operation_selected = bool(self.operation_combo.currentData())
-        
-        # Clock in requires employee and operation
-        self.clock_in_btn.setEnabled(employee_filled and operation_selected)
-        
-        # Clock out requires employee with active entries
-        if employee_filled:
-            try:
-                active_entries = self.controller.get_active_time_entries(self.employee_input.text().strip())
-                self.clock_out_btn.setEnabled(len(active_entries) > 0)
-            except:
-                self.clock_out_btn.setEnabled(False)
+            active = self.controller.get_active_entries_for_display(employee)
+        except Exception as ex:
+            show_error("Lookup Error", str(ex), parent=self)
+            return
+
+        if not active:
+            show_error("Not Clocked In", f"No active jobs found for '{employee}'.", parent=self)
+            return
+
+        if len(active) == 1:
+            entry_id = active[0]['id']
         else:
-            self.clock_out_btn.setEnabled(False)
-    
-    def update_current_time(self) -> None:
-        """Update current time display."""
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.time_label.setText(current_time)
-    
-    @pyqtSlot(dict)
-    def update_live_timers(self, timer_data: Dict[str, Any]) -> None:
-        """Update live timers for active jobs."""
-        self.active_timers = timer_data
-        self.refresh_active_jobs_display()
-    
-    def refresh_active_jobs_display(self) -> None:
-        """Refresh the active jobs list with timer data."""
-        self.active_jobs_list.clear()
-        
-        for entry_id, data in self.active_timers.items():
-            # Create list item with timer display
-            item_text = f"{data['employee_name']} - {data['operation']}\n"
-            item_text += f"Time: {data['elapsed_hours']:.2f}h ({data['elapsed_minutes']}m)\n"
-            item_text += f"Started: {data['start_time'].strftime('%H:%M:%S')}"
-            
-            item = QListWidgetItem(item_text)
-            item.setData(Qt.ItemDataRole.UserRole, entry_id)
-            self.active_jobs_list.addItem(item)
-    
-    def load_active_jobs(self) -> None:
-        """Load active jobs from controller."""
+            dlg = ActiveEntrySelectionDialog(active, parent=self)
+            if dlg.exec() != QDialog.DialogCode.Accepted or dlg.selected_entry_id is None:
+                return
+            entry_id = dlg.selected_entry_id
+
         try:
-            active_entries = self.controller.get_active_time_entries()
-            
-            # Update timer data
-            for entry in active_entries:
-                elapsed = self.controller.time_entry_service.calculate_elapsed_time(entry)
-                self.active_timers[entry.id] = {
-                    'employee_name': entry.employee_name,
-                    'operation': entry.operation,
-                    'elapsed_hours': elapsed['elapsed_hours'],
-                    'elapsed_minutes': elapsed['elapsed_minutes'],
-                    'elapsed_seconds': elapsed['elapsed_seconds'],
-                    'start_time': elapsed['start_time']
-                }
-            
-            self.refresh_active_jobs_display()
-            
-        except Exception as e:
-            logger.error(f"Error loading active jobs: {e}")
-    
-    def load_recent_activity(self) -> None:
-        """Load recent time entries."""
+            self.controller.clock_out_operator(entry_id)
+            self._clear_form()
+        except Exception as ex:
+            logger.error(f"Clock-out error: {ex}")
+            show_error("Clock Out Error", str(ex), parent=self)
+
+    # ------------------------------------------------------------------
+    # Form helpers
+    # ------------------------------------------------------------------
+
+    def _clear_form(self) -> None:
+        self._employee_input.clear()
+        self._work_order_input.clear()
+        self._operation_combo.setCurrentIndex(0)
+        self._station_combo.setCurrentIndex(0)
+        self._notes_input.clear()
+
+    # ------------------------------------------------------------------
+    # Button state management
+    # ------------------------------------------------------------------
+
+    def _on_employee_changed(self) -> None:
+        self._refresh_clock_in_btn()
+        # Debounce the DB-hitting clock-out check
+        self._clock_out_check_timer.stop()
+        if self._employee_input.text().strip():
+            self._clock_out_check_timer.start()
+        else:
+            self._clock_out_btn.setEnabled(False)
+
+    def _refresh_clock_in_btn(self) -> None:
+        has_employee = bool(self._employee_input.text().strip())
+        has_operation = bool(self._operation_combo.currentData())
+        self._clock_in_btn.setEnabled(has_employee and has_operation)
+
+    def _check_clock_out_eligibility(self) -> None:
+        """DB lookup to see whether the typed employee has active entries."""
+        employee = self._employee_input.text().strip()
+        if not employee:
+            self._clock_out_btn.setEnabled(False)
+            return
         try:
-            # Get entries from last 24 hours
-            end_time = datetime.now()
-            start_time = end_time - timedelta(hours=24)
-            
-            # For now, we'll use placeholder data
-            # In a real implementation, would call controller method
-            recent_data = []
-            
-            self.recent_table.set_data(recent_data)
-            
-        except Exception as e:
-            logger.error(f"Error loading recent activity: {e}")
-    
-    def on_data_changed(self) -> None:
-        """Handle data change notifications."""
-        self.load_active_jobs()
-        self.load_recent_activity()
-        self.update_button_states()
-    
-    def on_status_message(self, message: str, timeout: int) -> None:
-        """Handle status message notifications."""
+            active = self.controller.get_active_entries_for_display(employee)
+            self._clock_out_btn.setEnabled(len(active) > 0)
+        except Exception:
+            self._clock_out_btn.setEnabled(False)
+
+    # ------------------------------------------------------------------
+    # Live timer display
+    # ------------------------------------------------------------------
+
+    @pyqtSlot(list)
+    def _on_timer_tick(self, entries: list) -> None:
+        """Receive updated active entries from LiveTimerThread every second."""
+        self._active_entries = entries
+        self._refresh_active_jobs_display()
+
+    def _refresh_active_jobs_display(self) -> None:
+        self._active_jobs_list.clear()
+        self._active_count_label.setText(f"{len(self._active_entries)} active")
+
+        for e in self._active_entries:
+            elapsed_str = _format_hms(e.get('elapsed_seconds', 0))
+            station_part = f"  |  {e['station_id']}" if e.get('station_id') else ''
+            line1 = f"{e['employee_name']}  —  {_readable_operation(e['operation'])}{station_part}"
+            line2 = f"  Elapsed: {elapsed_str}  |  Started: {e['start_time'].strftime('%H:%M:%S')}"
+            item = QListWidgetItem(f"{line1}\n{line2}")
+            item.setData(Qt.ItemDataRole.UserRole, e['id'])
+            self._active_jobs_list.addItem(item)
+
+    def _load_active_jobs(self) -> None:
+        """Initial load of active jobs (before the timer thread fires)."""
+        try:
+            entries = self.controller.get_active_entries_for_display()
+            now = datetime.now()
+            for e in entries:
+                e['elapsed_seconds'] = int((now - e['start_time']).total_seconds())
+            self._active_entries = entries
+            self._refresh_active_jobs_display()
+        except Exception as ex:
+            logger.error(f"Error loading active jobs: {ex}")
+
+    # ------------------------------------------------------------------
+    # Recent activity
+    # ------------------------------------------------------------------
+
+    def _load_recent_activity(self) -> None:
+        try:
+            rows = self.controller.get_recent_completed_entries(hours=24)
+            self._recent_table.load_data(rows)
+        except Exception as ex:
+            logger.error(f"Error loading recent activity: {ex}")
+
+    # ------------------------------------------------------------------
+    # Wall clock
+    # ------------------------------------------------------------------
+
+    def _update_wall_clock(self) -> None:
+        self._clock_label.setText(datetime.now().strftime("%Y-%m-%d  %H:%M:%S"))
+
+    # ------------------------------------------------------------------
+    # Callbacks
+    # ------------------------------------------------------------------
+
+    def _on_data_changed(self) -> None:
+        self._load_active_jobs()
+        self._load_recent_activity()
+        # Re-check clock-out eligibility if employee is typed
+        if self._employee_input.text().strip():
+            self._check_clock_out_eligibility()
+
+    def _on_status_message(self, message: str, timeout: int) -> None:
         logger.info(f"Status: {message}")
-    
+
+    # ------------------------------------------------------------------
+    # Cleanup
+    # ------------------------------------------------------------------
+
     def cleanup(self) -> None:
-        """Clean up resources."""
-        if self.timer_thread:
-            self.timer_thread.stop()
-            self.timer_thread.wait()
-        
-        if hasattr(self, 'time_timer'):
-            self.time_timer.stop()
+        self._timer_thread.stop()
+        self._timer_thread.wait()
+        self._wall_clock_timer.stop()
+        self._clock_out_check_timer.stop()
