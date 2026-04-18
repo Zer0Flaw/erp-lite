@@ -79,7 +79,7 @@ class TimeEntry(Base):
     id = Column(Integer, primary_key=True)
     employee_id = Column(String(50), nullable=False, index=True)
     employee_name = Column(String(100), nullable=False)
-    work_order_id = Column(Integer, ForeignKey("work_orders.id"), nullable=True, index=True)
+    work_order_id = Column(Integer, nullable=True, index=True)
     operation = Column(String(50), nullable=False)  # OperationType enum value
     station_id = Column(String(50), nullable=True, index=True)
     start_time = Column(DateTime, nullable=False, default=func.now())
@@ -90,9 +90,6 @@ class TimeEntry(Base):
     badge_scan = Column(String(100), nullable=True)  # Badge scan data
     created_at = Column(DateTime, nullable=False, default=func.now())
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    work_order = relationship("WorkOrder", back_populates="time_entries")
     
     # Indexes
     __table_args__ = (
@@ -121,7 +118,8 @@ class ProductionOutput(Base):
     __tablename__ = "production_outputs"
     
     id = Column(Integer, primary_key=True)
-    work_order_id = Column(Integer, ForeignKey("work_orders.id"), nullable=False, index=True)
+    work_order_id = Column(Integer, nullable=False, index=True, default=0)
+    work_order_number = Column(String(50), nullable=True, index=True)
     batch_id = Column(Integer, ForeignKey("production_batches.id"), nullable=True, index=True)
     output_type = Column(String(20), nullable=False)  # ProductionOutputType enum value
     quantity_produced = Column(Numeric(12, 2), nullable=False)
@@ -156,7 +154,6 @@ class ProductionOutput(Base):
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
     
     # Relationships
-    work_order = relationship("WorkOrder", back_populates="production_outputs")
     batch = relationship("ProductionBatch", back_populates="production_outputs")
     
     # Indexes
@@ -349,6 +346,4 @@ class ProductionStation(Base):
 from database.models.production import WorkOrder
 
 # Add back-references to WorkOrder
-WorkOrder.time_entries = relationship("TimeEntry", back_populates="work_order")
-WorkOrder.production_outputs = relationship("ProductionOutput", back_populates="work_order")
 WorkOrder.production_batches = relationship("ProductionBatch", back_populates="work_order")

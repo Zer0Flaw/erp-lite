@@ -23,7 +23,7 @@ class ProductionOutputService:
     def __init__(self, db_manager):
         self.db_manager = db_manager
     
-    def create_production_output(self, work_order_id: int, output_type: str,
+    def create_production_output(self, work_order_number: str, output_type: str,
                                quantity_produced: Decimal, operator_id: str,
                                operator_name: str, station_id: Optional[str] = None,
                                batch_id: Optional[int] = None,
@@ -42,19 +42,12 @@ class ProductionOutputService:
         """Create a new production output record."""
         try:
             with self.db_manager.get_session() as session:
-                # Validate work order
-                work_order = session.query(WorkOrder).filter(
-                    WorkOrder.id == work_order_id
-                ).first()
-                if not work_order:
-                    raise ValueError(f"Work Order {work_order_id} not found")
-                
-                # Set default scrap quantity
                 if quantity_scrapped is None:
                     quantity_scrapped = Decimal('0')
-                
+
                 production_output = ProductionOutput(
-                    work_order_id=work_order_id,
+                    work_order_id=0,
+                    work_order_number=work_order_number,
                     batch_id=batch_id,
                     output_type=output_type,
                     quantity_produced=quantity_produced,
@@ -75,18 +68,17 @@ class ProductionOutputService:
                     timestamp=datetime.now(),
                     notes=notes
                 )
-                
-                # Calculate yield if theoretical yield is provided
+
                 if theoretical_yield:
                     production_output.calculate_yield()
-                
+
                 session.add(production_output)
                 session.commit()
                 session.refresh(production_output)
-                
-                logger.info(f"Created production output for work order {work_order_id}")
+
+                logger.info(f"Created production output for work order {work_order_number}")
                 return production_output
-                
+
         except Exception as e:
             logger.error(f"Error creating production output: {e}")
             raise
@@ -336,6 +328,114 @@ class ProductionOutputService:
             logger.error(f"Error searching production outputs: {e}")
             raise
     
+    def get_recent_production_outputs(self, days: int = 7,
+                                       work_order_number: Optional[str] = None,
+                                       output_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get recent production outputs as serialized display dicts."""
+        try:
+            cutoff = datetime.now() - timedelta(days=days)
+            with self.db_manager.get_session() as session:
+                query = session.query(ProductionOutput).filter(
+                    ProductionOutput.timestamp >= cutoff
+                )
+                if work_order_number:
+                    query = query.filter(ProductionOutput.work_order_number == work_order_number)
+                if output_type:
+                    query = query.filter(ProductionOutput.output_type == output_type)
+                outputs = query.order_by(ProductionOutput.timestamp.desc()).limit(200).all()
+                return [self._serialize_output(o) for o in outputs]
+        except Exception as e:
+            logger.error(f"Error getting recent production outputs: {e}")
+            raise
+
+    def _serialize_output(self, o: ProductionOutput) -> Dict[str, Any]:
+        yield_pct = float(o.yield_percentage) if o.yield_percentage else None
+        return {
+            'timestamp': o.timestamp.strftime('%Y-%m-%d %H:%M') if o.timestamp else '',
+            'work_order': o.work_order_number or str(o.work_order_id),
+            'output_type': o.output_type.replace('_', ' ').title(),
+            'quantity_produced': float(o.quantity_produced) if o.quantity_produced else 0,
+            'quantity_scrapped': float(o.quantity_scrapped) if o.quantity_scrapped else 0,
+            'yield_pct': f"{yield_pct:.1f}%" if yield_pct is not None else '—',
+            'density': f"{float(o.density):.2f}" if o.density else '—',
+            'operator_name': o.operator_name,
+            'station_id': o.station_id or '',
+        }
+
+    def get_active_work_orders(self) -> List[Dict[str, Any]]:
+        """Get open work orders for the work order dropdown."""
+        try:
+            with self.db_manager.get_session() as session:
+                from database.models.production import WorkOrder
+                wos = session.query(WorkOrder).filter(
+                    WorkOrder.status.in_(["Planned", "Released", "In Progress"])
+                ).order_by(WorkOrder.work_order_number).all()
+                return [
+                    {
+                        'work_order_number': w.work_order_number,
+                        'finished_good_name': w.finished_good_name or '',
+                        'status': w.status,
+                        'quantity_ordered': float(w.quantity_ordered) if w.quantity_ordered else 0,
+                    }
+                    for w in wos
+                ]
+        except Exception as e:
+            logger.error(f"Error getting active work orders: {e}")
+            raise
+
+    def get_block_mold_stations(self) -> List[Dict[str, Any]]:
+        """Get block mold stations for the mold ID dropdown."""
+        try:
+            with self.db_manager.get_session() as session:
+                from database.models.shop_floor import ProductionStation
+                stations = session.query(ProductionStation).filter(
+                    ProductionStation.station_type == "block_mold"
+                ).order_by(ProductionStation.station_id).all()
+                return [{'station_id': s.station_id, 'name': s.name} for s in stations]
+        except Exception as e:
+            logger.error(f"Error getting block mold stations: {e}")
+            raise
+
+    def get_materials_for_production(self) -> List[Dict[str, Any]]:
+        """Get active materials for the material consumed dropdown."""
+        try:
+            with self.db_manager.get_session() as session:
+                materials = session.query(Material).filter(
+                    Material.active == True,
+                    Material.deleted_at.is_(None)
+                ).order_by(Material.name).all()
+                return [
+                    {
+                        'id': str(m.id),
+                        'name': m.name,
+                        'sku': m.sku or '',
+                        'unit_of_measure': m.unit_of_measure or '',
+                    }
+                    for m in materials
+                ]
+        except Exception as e:
+            logger.error(f"Error getting materials for production: {e}")
+            raise
+
+    def deduct_material_for_production(self, material_id: str, quantity: Decimal,
+                                       work_order_number: str, operator_name: str) -> bool:
+        """Create a consumption transaction to deduct material from inventory."""
+        try:
+            from modules.inventory.services.transaction_service import TransactionService
+            transaction_service = TransactionService(self.db_manager)
+            result = transaction_service.create_consumption_transaction({
+                'material_id': material_id,
+                'quantity': quantity,
+                'reference_type': 'WO',
+                'reference_number': work_order_number,
+                'notes': f'Production consumption for {work_order_number}',
+                'created_by': operator_name,
+            })
+            return result is not None
+        except Exception as e:
+            logger.error(f"Error deducting material for production: {e}")
+            raise
+
     def get_daily_production_summary(self, date: datetime) -> Dict[str, Any]:
         """Get daily production summary."""
         try:

@@ -114,28 +114,75 @@ class ShopFloorController:
             raise
     
     # Production Output Operations
-    def record_production_output(self, work_order_id: int, output_type: str,
+    def record_production_output(self, work_order_number: str, output_type: str,
                                quantity_produced: float, operator_id: str,
-                               operator_name: str, **kwargs) -> Any:
-        """Record production output."""
+                               operator_name: str,
+                               material_id: Optional[str] = None,
+                               material_quantity: Optional[float] = None,
+                               **kwargs) -> Any:
+        """Record production output, optionally deducting material from inventory."""
         try:
             from decimal import Decimal
             output = self.production_output_service.create_production_output(
-                work_order_id=work_order_id,
+                work_order_number=work_order_number,
                 output_type=output_type,
                 quantity_produced=Decimal(str(quantity_produced)),
                 operator_id=operator_id,
                 operator_name=operator_name,
                 **kwargs
             )
-            
+
+            if material_id and material_quantity and material_quantity > 0:
+                self.production_output_service.deduct_material_for_production(
+                    material_id=material_id,
+                    quantity=Decimal(str(material_quantity)),
+                    work_order_number=work_order_number,
+                    operator_name=operator_name,
+                )
+
             self._notify_data_changed()
             self._notify_status_message(f"Recorded {quantity_produced} units of {output_type}")
             return output
-            
+
         except Exception as e:
             logger.error(f"Error recording production output: {e}")
             self._notify_status_message(f"Error recording output: {str(e)}")
+            raise
+
+    def get_recent_production_outputs(self, days: int = 7,
+                                      work_order_number: Optional[str] = None,
+                                      output_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get recent production outputs as serialized display dicts."""
+        try:
+            return self.production_output_service.get_recent_production_outputs(
+                days=days, work_order_number=work_order_number, output_type=output_type
+            )
+        except Exception as e:
+            logger.error(f"Error getting recent production outputs: {e}")
+            raise
+
+    def get_active_work_orders(self) -> List[Dict[str, Any]]:
+        """Get open work orders for dropdowns."""
+        try:
+            return self.production_output_service.get_active_work_orders()
+        except Exception as e:
+            logger.error(f"Error getting active work orders: {e}")
+            raise
+
+    def get_block_mold_stations(self) -> List[Dict[str, Any]]:
+        """Get block mold stations for mold ID dropdown."""
+        try:
+            return self.production_output_service.get_block_mold_stations()
+        except Exception as e:
+            logger.error(f"Error getting block mold stations: {e}")
+            raise
+
+    def get_materials_for_production(self) -> List[Dict[str, Any]]:
+        """Get active materials for material consumed dropdown."""
+        try:
+            return self.production_output_service.get_materials_for_production()
+        except Exception as e:
+            logger.error(f"Error getting materials for production: {e}")
             raise
     
     def get_work_order_yield(self, work_order_id: int) -> Dict[str, Any]:
